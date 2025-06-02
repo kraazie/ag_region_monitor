@@ -33,7 +33,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         }
     }
     
-    func getLocationPermissionStatus() -> String {
+func getLocationPermissionStatus() -> String {
+    if #available(iOS 14.0, *) {
         switch locationManager.authorizationStatus {
         case .notDetermined:
             return "notDetermined"
@@ -48,7 +49,24 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         @unknown default:
             return "unknown"
         }
+    } else {
+        switch CLLocationManager.authorizationStatus() {
+        case .notDetermined:
+            return "notDetermined"
+        case .denied:
+            return "denied"
+        case .restricted:
+            return "restricted"
+        case .authorizedWhenInUse:
+            return "authorizedWhenInUse"
+        case .authorizedAlways:
+            return "authorizedAlways"
+        @unknown default:
+            return "unknown"
+        }
     }
+}
+
     
     private func setupDefaultGeofence() {
         setupCustomGeofence(
@@ -106,30 +124,34 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     
     // MARK: - CLLocationManagerDelegate
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        switch manager.authorizationStatus {
+        let status: CLAuthorizationStatus
+        if #available(iOS 14.0, *) {
+            status = manager.authorizationStatus
+        } else {
+            status = CLLocationManager.authorizationStatus()
+        }
+
+        switch status {
         case .notDetermined:
-            // Initial state - request when in use
             locationManager.requestWhenInUseAuthorization()
-            
+
         case .authorizedWhenInUse:
             print("When In Use permission granted")
-            // Now request Always permission
             locationManager.requestAlwaysAuthorization()
-            
+
         case .authorizedAlways:
             print("Always permission granted")
-            // Start location services and setup geofence
             startLocationUpdates()
             setupDefaultGeofence()
 
         case .denied, .restricted:
             print("Location permission denied")
-            // Handle denied permission - maybe show alert to user
-            
+
         @unknown default:
             break
         }
     }
+
 
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         print("Entered region: \(region.identifier)")
