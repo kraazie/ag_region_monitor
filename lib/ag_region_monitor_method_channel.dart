@@ -83,6 +83,17 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   }
 
   @override
+  Future<String> checkLocationPermission() async {
+    try {
+      final result = await _channel.invokeMethod<String>('checkLocationPermission');
+      return result ?? 'unknown';
+    } catch (e) {
+      print('Error checking location permission: $e');
+      return 'unknown';
+    }
+  }
+
+  @override
   Stream<Map<String, dynamic>> get regionEvents {
     return _regionEventChannel.receiveBroadcastStream().map((event) {
       if (event is Map) {

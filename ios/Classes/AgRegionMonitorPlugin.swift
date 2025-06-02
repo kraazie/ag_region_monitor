@@ -33,6 +33,8 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
             stopAllMonitoring(result: result)
         case "requestNotificationPermission":
             requestNotificationPermission(result: result)
+        case "checkLocationPermission":
+            checkLocationPermission(result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -91,11 +93,21 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
     }
     
     private func requestNotificationPermission(result: @escaping FlutterResult) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+        locationManager?.requestNotificationPermission { granted in
             DispatchQueue.main.async {
                 result(granted)
             }
         }
+    }
+    
+    private func checkLocationPermission(result: @escaping FlutterResult) {
+        guard let locationManager = locationManager else {
+            result(FlutterError(code: "LOCATION_MANAGER_NOT_INITIALIZED", message: "Location manager not initialized", details: nil))
+            return
+        }
+        
+        let permissionStatus = locationManager.getLocationPermissionStatus()
+        result(permissionStatus)
     }
     
     // MARK: - Event Sinks

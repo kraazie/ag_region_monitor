@@ -58,6 +58,12 @@ class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgR
     // TODO: implement stopMonitoring
     throw UnimplementedError();
   }
+
+  @override
+  Future<String> checkLocationPermission() {
+    // TODO: implement checkLocationPermission
+    throw UnimplementedError();
+  }
 }
 
 void main() {

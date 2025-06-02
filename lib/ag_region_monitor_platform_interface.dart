@@ -52,6 +52,9 @@ abstract class AgRegionMonitorPlatform extends PlatformInterface {
   /// Request notification permissions
   Future<bool> requestNotificationPermission();
 
+  /// Check current location permission status
+  Future<String> checkLocationPermission();
+
   /// Stream of region events (enter/exit)
   Stream<Map<String, dynamic>> get regionEvents;
 

@@ -19,15 +19,34 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         // locationManager.requestAlwaysAuthorization()
         // startLocationUpdates()
         // setupDefaultGeofence()
-        requestNotificationPermission()
+        requestNotificationPermission { granted in
+            print("Notification permission: \(granted)")
+        }
         // Start with "When In Use" permission first
         locationManager.requestWhenInUseAuthorization()
 
     }
     
-    private func requestNotificationPermission() {
+    func requestNotificationPermission(completion: @escaping (Bool) -> Void) {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
-            print("Notification permission: \(granted)")
+            completion(granted)
+        }
+    }
+    
+    func getLocationPermissionStatus() -> String {
+        switch locationManager.authorizationStatus {
+        case .notDetermined:
+            return "notDetermined"
+        case .denied:
+            return "denied"
+        case .restricted:
+            return "restricted"
+        case .authorizedWhenInUse:
+            return "authorizedWhenInUse"
+        case .authorizedAlways:
+            return "authorizedAlways"
+        @unknown default:
+            return "unknown"
         }
     }
     

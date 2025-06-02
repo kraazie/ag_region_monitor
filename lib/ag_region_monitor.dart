@@ -32,6 +32,10 @@ class AgRegionMonitor {
   /// Request notification permissions
   static Future<bool> requestNotificationPermission() => _platform.requestNotificationPermission();
 
+  /// Check current location permission status
+  /// Returns: 'notDetermined', 'denied', 'restricted', 'authorizedWhenInUse', 'authorizedAlways', or 'unknown'
+  static Future<String> checkLocationPermission() => _platform.checkLocationPermission();
+
   /// Stream of region enter/exit events
   static Stream<Map<String, dynamic>> get regionEvents => _platform.regionEvents;
 
@@ -41,5 +45,17 @@ class AgRegionMonitor {
   /// Convenience method to setup Karachi danger zone (matching your Swift code)
   static Future<void> setupKarachiDangerZone() async {
     await setupGeofence(latitude: 24.8615, longitude: 67.0099, radius: 200, identifier: "KarachiDangerZone", notifyOnEntry: true, notifyOnExit: false);
+  }
+
+  /// Check if location permission is sufficient for geofencing
+  static Future<bool> hasLocationPermission() async {
+    final status = await checkLocationPermission();
+    return status == 'authorizedAlways' || status == 'authorizedWhenInUse';
+  }
+
+  /// Check if location permission allows background monitoring (geofencing)
+  static Future<bool> hasAlwaysLocationPermission() async {
+    final status = await checkLocationPermission();
+    return status == 'authorizedAlways';
   }
 }
