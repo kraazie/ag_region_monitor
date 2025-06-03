@@ -64,6 +64,24 @@ class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgR
     // TODO: implement checkLocationPermission
     throw UnimplementedError();
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> getActiveRegions() {
+    // TODO: implement getActiveRegions
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> removeAllRegions() {
+    // TODO: implement removeAllRegions
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> removeRegion(String identifier) {
+    // TODO: implement removeRegion
+    throw UnimplementedError();
+  }
 }
 
 void main() {
