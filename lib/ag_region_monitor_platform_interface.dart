@@ -55,6 +55,15 @@ abstract class AgRegionMonitorPlatform extends PlatformInterface {
   /// Check current location permission status
   Future<String> checkLocationPermission();
 
+  /// Get all active/monitored regions
+  Future<List<Map<String, dynamic>>> getActiveRegions();
+
+  /// Remove a specific region by identifier
+  Future<bool> removeRegion(String identifier);
+
+  /// Remove all regions
+  Future<bool> removeAllRegions();
+
   /// Stream of region events (enter/exit)
   Stream<Map<String, dynamic>> get regionEvents;
 

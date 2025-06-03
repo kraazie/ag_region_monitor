@@ -17,6 +17,8 @@ class MyApp extends StatelessWidget {
 }
 
 class RegionMonitorExample extends StatefulWidget {
+  const RegionMonitorExample({super.key});
+
   @override
   _RegionMonitorExampleState createState() => _RegionMonitorExampleState();
 }
@@ -25,6 +27,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
   bool _isInitialized = false;
   String _lastEvent = 'No events yet';
   String _currentLocation = 'Unknown';
+  List<Widget> _activeRegionCards = [];
 
   @override
   void initState() {
@@ -47,10 +50,20 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
       // Start monitoring
       await AgRegionMonitor.startMonitoring();
 
+      // Get Active Regions
+      _loadActiveRegionCards();
+
       setState(() {
         _isInitialized = true;
       });
     }
+  }
+
+  Future<void> _loadActiveRegionCards() async {
+    final cards = await displayActiveRegions(); // Calls your static method
+    setState(() {
+      _activeRegionCards = cards;
+    });
   }
 
   void _listenToEvents() {
@@ -105,7 +118,69 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
       notifyOnExit: true,
     );
 
+    // Get active regions list again..!!
+    _loadActiveRegionCards();
+
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Custom region added!')));
+  }
+
+  // // Example: Get all active regions and display them
+  // static Future<void> displayActiveRegions() async {
+  //   try {
+  //     final regions = await AgRegionMonitor.getActiveRegions();
+
+  //     print('Active Regions Count: ${regions.length}');
+
+  //     for (var region in regions) {
+  //       print('Region ID: ${region['identifier']}');
+  //       print('  Location: ${region['latitude']}, ${region['longitude']}');
+  //       print('  Radius: ${region['radius']}m');
+  //       print('  Notify on Entry: ${region['notifyOnEntry']}');
+  //       print('  Notify on Exit: ${region['notifyOnExit']}');
+  //       print('---');
+  //     }
+  //   } catch (e) {
+  //     print('Error getting active regions: $e');
+  //   }
+  // }
+
+  Future<List<Widget>> displayActiveRegions() async {
+    List<Widget> cards = [];
+
+    try {
+      final regions = await AgRegionMonitor.getActiveRegions();
+
+      for (var region in regions) {
+        cards.add(
+          Card(
+            margin: EdgeInsets.symmetric(vertical: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Region ID: ${region['identifier']}', style: TextStyle(fontWeight: FontWeight.bold)),
+                  SizedBox(height: 4),
+                  Text('Location: ${region['latitude']}, ${region['longitude']}'),
+                  Text('Radius: ${region['radius']} m'),
+                  Text('Notify on Entry: ${region['notifyOnEntry']}'),
+                  Text('Notify on Exit: ${region['notifyOnExit']}'),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      cards.add(
+        Card(
+          color: Colors.red[100],
+          child: Padding(padding: const EdgeInsets.all(12.0), child: Text('Error getting active regions: $e')),
+        ),
+      );
+    }
+
+    return cards;
   }
 
   @override
@@ -115,7 +190,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
               child: Padding(
@@ -132,22 +207,25 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
                 ),
               ),
             ),
+            // SizedBox(height: 20),
+            // Card(
+            //   child: Padding(
+            //     padding: EdgeInsets.all(16.0),
+            //     child: Column(
+            //       crossAxisAlignment: CrossAxisAlignment.start,
+            //       children: [
+            //         Text('Active Regions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            //         SizedBox(height: 8),
+            //         Text('• Karachi Danger Zone (24.8615, 67.0099) - 200m radius'),
+            //         Text('• Notify on Entry: Yes'),
+            //         Text('• Notify on Exit: No'),
+            //       ],
+            //     ),
+            //   ),
+            // ),
             SizedBox(height: 20),
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Active Regions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
-                    Text('• Karachi Danger Zone (24.8615, 67.0099) - 200m radius'),
-                    Text('• Notify on Entry: Yes'),
-                    Text('• Notify on Exit: No'),
-                  ],
-                ),
-              ),
-            ),
+            Text('Active Regions:', style: TextStyle(fontWeight: FontWeight.bold)),
+            for (var card in _activeRegionCards) card, // << your for-loop here
             SizedBox(height: 20),
             Row(
               children: [

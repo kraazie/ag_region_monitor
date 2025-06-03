@@ -122,6 +122,48 @@ func getLocationPermissionStatus() -> String {
         print("Stopped all monitoring")
     }
     
+    // MARK: - New Region Management Methods
+    
+    func getActiveRegions() -> [[String: Any]] {
+        var regions: [[String: Any]] = []
+        
+        for region in locationManager.monitoredRegions {
+            if let circularRegion = region as? CLCircularRegion {
+                let regionData: [String: Any] = [
+                    "identifier": region.identifier,
+                    "latitude": circularRegion.center.latitude,
+                    "longitude": circularRegion.center.longitude,
+                    "radius": circularRegion.radius,
+                    "notifyOnEntry": region.notifyOnEntry,
+                    "notifyOnExit": region.notifyOnExit
+                ]
+                regions.append(regionData)
+            }
+        }
+        
+        return regions
+    }
+    
+    func removeRegion(identifier: String) -> Bool {
+        for region in locationManager.monitoredRegions {
+            if region.identifier == identifier {
+                locationManager.stopMonitoring(for: region)
+                print("Removed region: \(identifier)")
+                return true
+            }
+        }
+        print("Region not found: \(identifier)")
+        return false
+    }
+    
+    func removeAllRegions() {
+        let regionCount = locationManager.monitoredRegions.count
+        for region in locationManager.monitoredRegions {
+            locationManager.stopMonitoring(for: region)
+        }
+        print("Removed all \(regionCount) regions")
+    }
+    
     // MARK: - CLLocationManagerDelegate
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status: CLAuthorizationStatus

@@ -36,6 +36,18 @@ class AgRegionMonitor {
   /// Returns: 'notDetermined', 'denied', 'restricted', 'authorizedWhenInUse', 'authorizedAlways', or 'unknown'
   static Future<String> checkLocationPermission() => _platform.checkLocationPermission();
 
+  /// Get all active/monitored regions
+  /// Returns a list of region data with identifier, latitude, longitude, radius, notifyOnEntry, and notifyOnExit
+  static Future<List<Map<String, dynamic>>> getActiveRegions() => _platform.getActiveRegions();
+
+  /// Remove a specific region by identifier
+  /// Returns true if the region was successfully removed, false if not found
+  static Future<bool> removeRegion(String identifier) => _platform.removeRegion(identifier);
+
+  /// Remove all regions
+  /// Returns true if all regions were successfully removed
+  static Future<bool> removeAllRegions() => _platform.removeAllRegions();
+
   /// Stream of region enter/exit events
   static Stream<Map<String, dynamic>> get regionEvents => _platform.regionEvents;
 
@@ -57,5 +69,33 @@ class AgRegionMonitor {
   static Future<bool> hasAlwaysLocationPermission() async {
     final status = await checkLocationPermission();
     return status == 'authorizedAlways';
+  }
+
+  /// Get the count of active regions
+  static Future<int> getActiveRegionCount() async {
+    final regions = await getActiveRegions();
+    return regions.length;
+  }
+
+  /// Check if a specific region is being monitored
+  static Future<bool> isRegionActive(String identifier) async {
+    final regions = await getActiveRegions();
+    return regions.any((region) => region['identifier'] == identifier);
+  }
+
+  /// Get region details by identifier
+  static Future<Map<String, dynamic>?> getRegionById(String identifier) async {
+    final regions = await getActiveRegions();
+    try {
+      return regions.firstWhere((region) => region['identifier'] == identifier);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get all region identifiers
+  static Future<List<String>> getActiveRegionIds() async {
+    final regions = await getActiveRegions();
+    return regions.map((region) => region['identifier'] as String).toList();
   }
 }

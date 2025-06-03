@@ -35,6 +35,12 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
             requestNotificationPermission(result: result)
         case "checkLocationPermission":
             checkLocationPermission(result: result)
+        case "getActiveRegions":
+            getActiveRegions(result: result)
+        case "removeRegion":
+            removeRegion(call: call, result: result)
+        case "removeAllRegions":
+            removeAllRegions(result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -108,6 +114,42 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
         
         let permissionStatus = locationManager.getLocationPermissionStatus()
         result(permissionStatus)
+    }
+    
+    private func getActiveRegions(result: @escaping FlutterResult) {
+        guard let locationManager = locationManager else {
+            result(FlutterError(code: "LOCATION_MANAGER_NOT_INITIALIZED", message: "Location manager not initialized", details: nil))
+            return
+        }
+        
+        let activeRegions = locationManager.getActiveRegions()
+        result(activeRegions)
+    }
+    
+    private func removeRegion(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let identifier = args["identifier"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+            return
+        }
+        
+        guard let locationManager = locationManager else {
+            result(FlutterError(code: "LOCATION_MANAGER_NOT_INITIALIZED", message: "Location manager not initialized", details: nil))
+            return
+        }
+        
+        let success = locationManager.removeRegion(identifier: identifier)
+        result(success)
+    }
+    
+    private func removeAllRegions(result: @escaping FlutterResult) {
+        guard let locationManager = locationManager else {
+            result(FlutterError(code: "LOCATION_MANAGER_NOT_INITIALIZED", message: "Location manager not initialized", details: nil))
+            return
+        }
+        
+        locationManager.removeAllRegions()
+        result(true)
     }
     
     // MARK: - Event Sinks

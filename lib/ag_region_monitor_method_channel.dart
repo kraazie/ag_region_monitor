@@ -94,6 +94,42 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> getActiveRegions() async {
+    try {
+      final result = await _channel.invokeMethod<List>('getActiveRegions');
+      if (result != null) {
+        return result.map((region) => Map<String, dynamic>.from(region)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error getting active regions: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<bool> removeRegion(String identifier) async {
+    try {
+      final result = await _channel.invokeMethod<bool>('removeRegion', {'identifier': identifier});
+      return result ?? false;
+    } catch (e) {
+      print('Error removing region: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> removeAllRegions() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('removeAllRegions');
+      return result ?? false;
+    } catch (e) {
+      print('Error removing all regions: $e');
+      return false;
+    }
+  }
+
+  @override
   Stream<Map<String, dynamic>> get regionEvents {
     return _regionEventChannel.receiveBroadcastStream().map((event) {
       if (event is Map) {
