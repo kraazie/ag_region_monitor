@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'ag_region_monitor_platform_interface.dart';
 
@@ -12,7 +13,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
       final result = await _channel.invokeMethod<bool>('initialize');
       return result ?? false;
     } catch (e) {
-      print('Error initializing location manager: $e');
+      debugPrint('Error initializing location manager: $e');
       return false;
     }
   }
@@ -36,7 +37,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
         'notifyOnExit': notifyOnExit,
       });
     } catch (e) {
-      print('Error setting up geofence: $e');
+      debugPrint('Error setting up geofence: $e');
       rethrow;
     }
   }
@@ -46,7 +47,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
     try {
       await _channel.invokeMethod('startMonitoring');
     } catch (e) {
-      print('Error starting monitoring: $e');
+      debugPrint('Error starting monitoring: $e');
       rethrow;
     }
   }
@@ -56,7 +57,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
     try {
       await _channel.invokeMethod('stopMonitoring', {'identifier': identifier});
     } catch (e) {
-      print('Error stopping monitoring: $e');
+      debugPrint('Error stopping monitoring: $e');
       rethrow;
     }
   }
@@ -66,7 +67,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
     try {
       await _channel.invokeMethod('stopAllMonitoring');
     } catch (e) {
-      print('Error stopping all monitoring: $e');
+      debugPrint('Error stopping all monitoring: $e');
       rethrow;
     }
   }
@@ -77,7 +78,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
       final result = await _channel.invokeMethod<bool>('requestNotificationPermission');
       return result ?? false;
     } catch (e) {
-      print('Error requesting notification permission: $e');
+      debugPrint('Error requesting notification permission: $e');
       return false;
     }
   }
@@ -88,7 +89,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
       final result = await _channel.invokeMethod<String>('checkLocationPermission');
       return result ?? 'unknown';
     } catch (e) {
-      print('Error checking location permission: $e');
+      debugPrint('Error checking location permission: $e');
       return 'unknown';
     }
   }
@@ -102,7 +103,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
       }
       return [];
     } catch (e) {
-      print('Error getting active regions: $e');
+      debugPrint('Error getting active regions: $e');
       return [];
     }
   }
@@ -113,7 +114,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
       final result = await _channel.invokeMethod<bool>('removeRegion', {'identifier': identifier});
       return result ?? false;
     } catch (e) {
-      print('Error removing region: $e');
+      debugPrint('Error removing region: $e');
       return false;
     }
   }
@@ -124,7 +125,7 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
       final result = await _channel.invokeMethod<bool>('removeAllRegions');
       return result ?? false;
     } catch (e) {
-      print('Error removing all regions: $e');
+      debugPrint('Error removing all regions: $e');
       return false;
     }
   }

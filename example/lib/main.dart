@@ -6,6 +6,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -70,7 +72,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
     // Listen for region events
     AgRegionMonitor.regionEvents.listen(
       (event) {
-        print('Region event received: $event');
+        debugPrint('Region event received: $event');
         setState(() {
           _lastEvent = '${event['event']} - ${event['identifier']}';
         });
@@ -81,7 +83,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
         }
       },
       onError: (error) {
-        print('Region events error: $error');
+        debugPrint('Region events error: $error');
         setState(() {
           _lastEvent = 'Error: $error';
         });
@@ -91,7 +93,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
     // Listen for location updates
     AgRegionMonitor.locationUpdates.listen(
       (location) {
-        print('Location update received: $location');
+        debugPrint('Location update received: $location');
         setState(() {
           _currentLocation =
               'Lat: ${location['latitude']?.toStringAsFixed(4) ?? 'N/A'}, '
@@ -99,7 +101,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
         });
       },
       onError: (error) {
-        print('Location updates error: $error');
+        debugPrint('Location updates error: $error');
         setState(() {
           _currentLocation = 'Error: $error';
         });
