@@ -199,6 +199,134 @@ await AgRegionMonitor.stopAllMonitoring();
 print('Stopped all monitoring');
 ```
 
+### Region Management Methods
+
+#### `getActiveRegions()`
+Get all currently active/monitored regions with their details.
+
+```dart
+Future<List<Map<String, dynamic>>> getActiveRegions()
+```
+
+**Returns:** List of region data with identifier, latitude, longitude, radius, notifyOnEntry, and notifyOnExit
+
+**Example:**
+```dart
+List<Map<String, dynamic>> regions = await AgRegionMonitor.getActiveRegions();
+for (var region in regions) {
+  print('Region: ${region['identifier']} at (${region['latitude']}, ${region['longitude']})');
+  print('Radius: ${region['radius']}m, Entry: ${region['notifyOnEntry']}, Exit: ${region['notifyOnExit']}');
+}
+```
+
+#### `removeRegion()`
+Remove a specific region by identifier.
+
+```dart
+Future<bool> removeRegion(String identifier)
+```
+
+**Returns:** `true` if the region was successfully removed, `false` if not found
+
+**Example:**
+```dart
+bool success = await AgRegionMonitor.removeRegion('NewYorkOffice');
+if (success) {
+  print('Region removed successfully');
+} else {
+  print('Region not found');
+}
+```
+
+#### `removeAllRegions()`
+Remove all regions from monitoring.
+
+```dart
+Future<bool> removeAllRegions()
+```
+
+**Returns:** `true` if all regions were successfully removed
+
+**Example:**
+```dart
+bool success = await AgRegionMonitor.removeAllRegions();
+if (success) {
+  print('All regions removed');
+}
+```
+
+#### `getActiveRegionCount()`
+Get the count of currently active regions.
+
+```dart
+Future<int> getActiveRegionCount()
+```
+
+**Example:**
+```dart
+int count = await AgRegionMonitor.getActiveRegionCount();
+print('Currently monitoring $count regions');
+```
+
+#### `isRegionActive()`
+Check if a specific region is being monitored.
+
+```dart
+Future<bool> isRegionActive(String identifier)
+```
+
+**Example:**
+```dart
+bool isActive = await AgRegionMonitor.isRegionActive('NewYorkOffice');
+if (isActive) {
+  print('Region is currently being monitored');
+} else {
+  print('Region is not active');
+}
+```
+
+#### `getRegionById()`
+Get region details by identifier.
+
+```dart
+Future<Map<String, dynamic>?> getRegionById(String identifier)
+```
+
+**Returns:** Region data map or `null` if not found
+
+**Example:**
+```dart
+Map<String, dynamic>? region = await AgRegionMonitor.getRegionById('NewYorkOffice');
+if (region != null) {
+  print('Found region: ${region['identifier']}');
+  print('Location: (${region['latitude']}, ${region['longitude']})');
+  print('Radius: ${region['radius']}m');
+} else {
+  print('Region not found');
+}
+```
+
+#### `getActiveRegionIds()`
+Get all region identifiers that are currently being monitored.
+
+```dart
+Future<List<String>> getActiveRegionIds()
+```
+
+**Example:**
+```dart
+List<String> regionIds = await AgRegionMonitor.getActiveRegionIds();
+print('Active regions: ${regionIds.join(', ')}');
+
+// Check each region
+for (String id in regionIds) {
+  Map<String, dynamic>? region = await AgRegionMonitor.getRegionById(id);
+  if (region != null) {
+    print('$id: (${region['latitude']}, ${region['longitude']})');
+  }
+}
+```
+
 ### Permission Methods
 
 #### `requestNotificationPermission()`
@@ -286,6 +414,57 @@ if (!hasPermission) {
   print('Need "Always" permission for background monitoring');
 } else {
   print('Ready for geofencing!');
+}
+```
+
+### Region Management Examples
+
+```dart
+// Complete region management workflow
+class RegionManagementExample {
+  
+  static Future<void> manageRegions() async {
+    // Setup multiple regions
+    await AgRegionMonitor.setupGeofence(
+      latitude: 40.7128, longitude: -74.0060, radius: 200,
+      identifier: 'NewYorkOffice', notifyOnEntry: true, notifyOnExit: true,
+    );
+    
+    await AgRegionMonitor.setupGeofence(
+      latitude: 37.7749, longitude: -122.4194, radius: 150,
+      identifier: 'SanFranciscoOffice', notifyOnEntry: true, notifyOnExit: false,
+    );
+    
+    // Check what's active
+    int count = await AgRegionMonitor.getActiveRegionCount();
+    print('Total active regions: $count');
+    
+    // List all region IDs
+    List<String> regionIds = await AgRegionMonitor.getActiveRegionIds();
+    print('Active region IDs: ${regionIds.join(', ')}');
+    
+    // Get details for specific region
+    Map<String, dynamic>? nyOffice = await AgRegionMonitor.getRegionById('NewYorkOffice');
+    if (nyOffice != null) {
+      print('NY Office radius: ${nyOffice['radius']}m');
+    }
+    
+    // Check if specific region is active
+    bool isNYActive = await AgRegionMonitor.isRegionActive('NewYorkOffice');
+    print('NY Office active: $isNYActive');
+    
+    // Remove specific region
+    bool removed = await AgRegionMonitor.removeRegion('SanFranciscoOffice');
+    print('SF Office removed: $removed');
+    
+    // Final count
+    count = await AgRegionMonitor.getActiveRegionCount();
+    print('Remaining regions: $count');
+    
+    // Remove all regions
+    await AgRegionMonitor.removeAllRegions();
+    print('All regions removed');
+  }
 }
 ```
 
@@ -388,6 +567,8 @@ class _GeofenceDemoState extends State<GeofenceDemo> {
   String _status = 'Not initialized';
   String _locationPermission = 'Unknown';
   String _lastEvent = 'None';
+  int _activeRegionCount = 0;
+  List<String> _regionIds = [];
   StreamSubscription? _regionSubscription;
   StreamSubscription? _locationSubscription;
 
@@ -428,11 +609,15 @@ class _GeofenceDemoState extends State<GeofenceDemo> {
       // Start monitoring
       await AgRegionMonitor.startMonitoring();
       
+      // Update region info
+      await _updateRegionInfo();
+      
       // Listen to events
       _regionSubscription = AgRegionMonitor.regionEvents.listen((event) {
         setState(() {
           _lastEvent = '${event['event']} - ${event['identifier']}';
         });
+        _updateRegionInfo(); // Refresh region info on events
       });
 
       _locationSubscription = AgRegionMonitor.locationUpdates.listen((location) {
@@ -442,6 +627,16 @@ class _GeofenceDemoState extends State<GeofenceDemo> {
     } catch (e) {
       setState(() => _status = 'Error: $e');
     }
+  }
+
+  Future<void> _updateRegionInfo() async {
+    int count = await AgRegionMonitor.getActiveRegionCount();
+    List<String> ids = await AgRegionMonitor.getActiveRegionIds();
+    
+    setState(() {
+      _activeRegionCount = count;
+      _regionIds = ids;
+    });
   }
 
   @override
@@ -465,7 +660,12 @@ class _GeofenceDemoState extends State<GeofenceDemo> {
             Text('Location Permission: $_locationPermission'),
             SizedBox(height: 10),
             Text('Last Event: $_lastEvent'),
+            SizedBox(height: 10),
+            Text('Active Regions: $_activeRegionCount'),
+            SizedBox(height: 10),
+            Text('Region IDs: ${_regionIds.join(', ')}'),
             SizedBox(height: 20),
+            
             ElevatedButton(
               onPressed: () async {
                 String permission = await AgRegionMonitor.checkLocationPermission();
@@ -473,14 +673,54 @@ class _GeofenceDemoState extends State<GeofenceDemo> {
               },
               child: Text('Check Permission'),
             ),
+            
             ElevatedButton(
               onPressed: () async {
                 await AgRegionMonitor.setupKarachiDangerZone();
+                await _updateRegionInfo();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Karachi danger zone setup!')),
                 );
               },
               child: Text('Setup Karachi Zone'),
+            ),
+            
+            ElevatedButton(
+              onPressed: () async {
+                List<Map<String, dynamic>> regions = await AgRegionMonitor.getActiveRegions();
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Active Regions'),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: regions.map((region) => 
+                          Text('${region['identifier']}: (${region['latitude']}, ${region['longitude']}) - ${region['radius']}m')
+                        ).toList(),
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: Text('Show Region Details'),
+            ),
+            
+            ElevatedButton(
+              onPressed: () async {
+                bool success = await AgRegionMonitor.removeAllRegions();
+                await _updateRegionInfo();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('All regions removed: $success')),
+                );
+              },
+              child: Text('Remove All Regions'),
             ),
           ],
         ),
@@ -553,6 +793,63 @@ class LocationManager {
 }
 ```
 
+### 4. Region Management Best Practices
+```dart
+class RegionManager {
+  
+  // Setup regions with validation
+  static Future<bool> setupRegionSafely({
+    required double latitude,
+    required double longitude,
+    required double radius,
+    required String identifier,
+    bool notifyOnEntry = true,
+    bool notifyOnExit = false,
+  }) async {
+    // Check if region already exists
+    bool exists = await AgRegionMonitor.isRegionActive(identifier);
+    if (exists) {
+      print('Region $identifier already exists');
+      return false;
+    }
+    
+    // Check region count limit (iOS supports ~20 regions)
+    int count = await AgRegionMonitor.getActiveRegionCount();
+    if (count >= 19) {
+      print('Too many regions active. Current: $count');
+      return false;
+    }
+    
+    try {
+      await AgRegionMonitor.setupGeofence(
+        latitude: latitude,
+        longitude: longitude,
+        radius: radius,
+        identifier: identifier,
+        notifyOnEntry: notifyOnEntry,
+        notifyOnExit: notifyOnExit,
+      );
+      return true;
+    } catch (e) {
+      print('Failed to setup region: $e');
+      return false;
+    }
+  }
+  
+  // Clean up specific regions
+  static Future<void> cleanupOldRegions(List<String> regionsToKeep) async {
+    List<String> activeIds = await AgRegionMonitor.getActiveRegionIds();
+    
+    for (String id in activeIds) {
+      if (!regionsToKeep.contains(id)) {
+        bool removed = await AgRegionMonitor.removeRegion(id);
+        print('Removed old region $id: $removed');
+      }
+    }
+  }
+}
+```
+
 ## Limitations
 
 - **iOS Only**: Currently only supports iOS. Android support is planned.
@@ -582,6 +879,11 @@ class LocationManager {
    - Test with larger radius first (200m+)
    - Check that you're listening to the event stream
 
+5. **Region management issues**
+   - Use `getActiveRegionCount()` to check region limits
+   - Use `isRegionActive()` to avoid duplicate regions
+   - Use `getActiveRegionIds()` to debug what's currently monitored
+
 ### Debug Tips
 
 ```dart
@@ -599,6 +901,23 @@ Timer.periodic(Duration(seconds: 30), (timer) async {
   String status = await AgRegionMonitor.checkLocationPermission();
   print('Permission status: $status');
 });
+
+// Debug region management
+Future<void> debugRegions() async {
+  int count = await AgRegionMonitor.getActiveRegionCount();
+  List<String> ids = await AgRegionMonitor.getActiveRegionIds();
+  List<Map<String, dynamic>> regions = await AgRegionMonitor.getActiveRegions();
+  
+  print('=== REGION DEBUG ===');
+  print('Active count: $count');
+  print('Active IDs: ${ids.join(', ')}');
+  
+  for (var region in regions) {
+    print('${region['identifier']}: (${region['latitude']}, ${region['longitude']}) radius: ${region['radius']}m');
+    print('  Entry: ${region['notifyOnEntry']}, Exit: ${region['notifyOnExit']}');
+  }
+  print('==================');
+}
 ```
 
 ## Contributing
