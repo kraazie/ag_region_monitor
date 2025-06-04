@@ -1,11 +1,11 @@
 name: ag_region_monitor
 description: "Region Monitor plugin for Flutter, providing location-based event handling."
-version: 1.0.1
+version: 1.0.2
 homepage: https://github.com/kraazie/ag_region_monitor.git
 
 environment:
   sdk: ^3.4.0
-  flutter: '>=3.29.0'
+  flutter: '>=3.20.0'
 
 dependencies:
   flutter:
