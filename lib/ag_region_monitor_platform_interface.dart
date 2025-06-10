@@ -48,6 +48,8 @@ abstract class AgRegionMonitorPlatform extends PlatformInterface {
 
   Future<bool> removeAllRegions();
 
+  Future<void> setNotificationsEnabled(bool enabled);
+
   Stream<Map<String, dynamic>> get regionEvents;
 
   Stream<Map<String, dynamic>> get locationUpdates;

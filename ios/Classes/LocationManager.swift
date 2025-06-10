@@ -13,9 +13,11 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     private var locationManager = CLLocationManager()
     weak var delegate: LocationManagerDelegate?
     private var notificationContent: [String: [String: String]] = [:]
+    private var notificationsEnabled = true
     
     // Key for UserDefaults persistence
     private let kNotificationContentKey = "ag_region_monitor_notification_content"
+    private let kNotificationsEnabledKey = "ag_region_monitor_notifications_enabled"
 
     override init() {
         super.init()
@@ -23,6 +25,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         
         // Load any saved notification content from previous sessions
         loadNotificationContent()
+        loadNotificationEnable()
         
         requestNotificationPermission { granted in
             print("Notification permission: \(granted)")
@@ -42,8 +45,20 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             print("Successfully loaded notification content from UserDefaults.")
         }
     }
+
+      private func loadNotificationEnable() {
+         if let isEnabled = UserDefaults.standard.bool(forKey: kNotificationsEnabledKey) as? Bool {
+            notificationsEnabled = isEnabled
+            print("Successfully loaded notification enable from UserDefaults.")
+        }
+    }
     
     // MARK: - Public Methods
+
+    func setNotificationsEnabled(_ enabled: Bool) {
+        notificationsEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: kNotificationsEnabledKey)
+    }
     
     func requestNotificationPermission(completion: @escaping (Bool) -> Void) {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
@@ -234,6 +249,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     }
     
     private func sendLocalNotification(for regionIdentifier: String) {
+        guard notificationsEnabled else { return }
+        
         let content = UNMutableNotificationContent()
         
         if let notification = notificationContent[regionIdentifier],
@@ -250,4 +267,5 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }
+    
 }

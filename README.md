@@ -307,6 +307,18 @@ if (success) {
 }
 ```
 
+### `Notification Control`
+Enable or Disable local notifications which plugin handles internally
+
+```dart
+// Disable notifications globally
+await AgRegionMonitor.setNotificationsEnabled(false);
+
+// Re-enable notifications
+await AgRegionMonitor.setNotificationsEnabled(true);
+```
+
+
 #### `getActiveRegionCount()`
 Get the count of currently active regions.
 

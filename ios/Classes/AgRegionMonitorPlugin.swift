@@ -41,6 +41,8 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
             removeRegion(call: call, result: result)
         case "removeAllRegions":
             removeAllRegions(result: result)
+        case "setNotificationsEnabled":
+            setNotificationsEnabled(call: call, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -154,6 +156,17 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
         
         locationManager.removeAllRegions()
         result(true)
+    }
+
+    private func setNotificationsEnabled(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+            let enabled = args["enabled"] as? Bool else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+            return
+        }
+        
+        locationManager?.setNotificationsEnabled(enabled)
+        result(nil)
     }
     
     func setRegionEventSink(_ eventSink: FlutterEventSink?) {

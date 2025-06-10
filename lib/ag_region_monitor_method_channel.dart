@@ -135,6 +135,16 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   }
 
   @override
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    try {
+      await _channel.invokeMethod('setNotificationsEnabled', {'enabled': enabled});
+    } catch (e) {
+      debugPrint('Error setting notification state: $e');
+      rethrow;
+    }
+  }
+
+  @override
   Stream<Map<String, dynamic>> get regionEvents {
     return _regionEventChannel.receiveBroadcastStream().map((event) {
       if (event is Map) {

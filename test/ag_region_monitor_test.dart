@@ -84,6 +84,12 @@ class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgR
     // TODO: implement removeRegion
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> setNotificationsEnabled(bool enabled) {
+    // TODO: implement setNotificationsEnabled
+    throw UnimplementedError();
+  }
 }
 
 void main() {

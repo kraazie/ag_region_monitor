@@ -9,3 +9,4 @@
 ## 1.0.3
 
 * Local notifications title and body can be customized for each region.
+* Enable or Dislable local notifications.

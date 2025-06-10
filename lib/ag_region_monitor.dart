@@ -45,6 +45,8 @@ class AgRegionMonitor {
 
   static Future<bool> removeAllRegions() => _platform.removeAllRegions();
 
+  static Future<void> setNotificationsEnabled(bool enabled) => _platform.setNotificationsEnabled(enabled);
+
   static Stream<Map<String, dynamic>> get regionEvents => _platform.regionEvents;
 
   static Stream<Map<String, dynamic>> get locationUpdates => _platform.locationUpdates;
