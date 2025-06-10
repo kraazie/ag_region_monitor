@@ -4,8 +4,8 @@
 
 ## 1.0.1
 
-* Changed minimum flutte version to ^3.29.0 and dart version to ^3.4.0
+* Changed minimum flutter version to ^3.29.0 and dart version to ^3.4.0
 
-## 1.0.2
+## 1.0.3
 
-* Changed minimum flutte version to ^3.20.0
+* Local notifications title and body can be customized for each region.

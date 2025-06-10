@@ -1,16 +1,18 @@
 # AgRegionMonitor Plugin
 
-A Flutter plugin for iOS that provides geofencing and region monitoring capabilities using CoreLocation. This plugin allows you to monitor when users enter or exit specific geographic regions, with support for local notifications and real-time location updates.
+A Flutter plugin for iOS that provides geofencing and region monitoring capabilities using CoreLocation. This plugin allows you to monitor when users enter or exit specific geographic regions, with support for customizable local notifications and real-time location updates.
 
 ## Features
 
 - ✅ **Geofencing** - Monitor circular geographic regions
 - ✅ **Background Monitoring** - Works when app is in background (with proper permissions)
-- ✅ **Local Notifications** - Automatic notifications when entering/exiting regions
+- ✅ **Custom Local Notifications** - Personalized notifications with custom titles and messages
+- ✅ **Persistent Notification Settings** - Notification preferences saved across app sessions
 - ✅ **Real-time Location Updates** - Stream of location changes
 - ✅ **Permission Management** - Handle location and notification permissions
 - ✅ **Multiple Regions** - Monitor multiple geofences simultaneously
-- ✅ **Customizable Notifications** - Configure entry/exit notifications per region
+- ✅ **Flexible Entry/Exit Monitoring** - Configure notifications per region for entry and/or exit
+- ✅ **Region Management** - Add, remove, and query active regions
 
 ## Platform Support
 
@@ -25,7 +27,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  ag_region_monitor: ^1.0.0
+  ag_region_monitor: ^1.0.3
 ```
 
 Then run:
@@ -87,7 +89,7 @@ class LocationService {
     print('Notification permission: $notificationPermission');
     print('Location permission: $locationPermission');
 
-    // 3. Setup a geofence
+    // 3. Setup a geofence with custom notification
     await AgRegionMonitor.setupGeofence(
       latitude: 37.7749,
       longitude: -122.4194,
@@ -95,6 +97,8 @@ class LocationService {
       identifier: 'SanFranciscoOffice',
       notifyOnEntry: true,
       notifyOnExit: true,
+      notificationTitle: '🏢 Welcome to the Office!',
+      notificationBody: 'You have entered the San Francisco office area. Check in to start your workday.',
     );
 
     // 4. Start monitoring
@@ -128,7 +132,7 @@ if (success) {
 ```
 
 #### `setupGeofence()`
-Create a circular geofence region for monitoring.
+Create a circular geofence region for monitoring with customizable notifications.
 
 ```dart
 Future<void> setupGeofence({
@@ -138,6 +142,8 @@ Future<void> setupGeofence({
   required String identifier,
   bool notifyOnEntry = true,
   bool notifyOnExit = false,
+  String? notificationTitle,
+  String? notificationBody,
 })
 ```
 
@@ -148,6 +154,8 @@ Future<void> setupGeofence({
 - `identifier` - Unique identifier for the region
 - `notifyOnEntry` - Show notification when entering region
 - `notifyOnExit` - Show notification when exiting region
+- `notificationTitle` - **NEW!** Custom title for the notification (persisted across app sessions)
+- `notificationBody` - **NEW!** Custom body text for the notification (persisted across app sessions)
 
 **Example:**
 ```dart
@@ -158,6 +166,45 @@ await AgRegionMonitor.setupGeofence(
   identifier: 'NewYorkOffice',
   notifyOnEntry: true,
   notifyOnExit: true,
+  notificationTitle: '🏙️ NYC Office Zone',
+  notificationBody: 'Welcome to the New York office. Tap to check your schedule and meetings.',
+);
+```
+
+**Custom Notification Examples:**
+```dart
+// Home geofence
+await AgRegionMonitor.setupGeofence(
+  latitude: 40.7589,
+  longitude: -73.9851,
+  radius: 50,
+  identifier: 'Home',
+  notifyOnEntry: true,
+  notificationTitle: '🏠 Welcome Home',
+  notificationBody: 'You\'ve arrived home safely. Time to relax!',
+);
+
+// Gym geofence
+await AgRegionMonitor.setupGeofence(
+  latitude: 40.7505,
+  longitude: -73.9934,
+  radius: 75,
+  identifier: 'Gym',
+  notifyOnEntry: true,
+  notificationTitle: '💪 Workout Time!',
+  notificationBody: 'Ready to crush your fitness goals? Let\'s go!',
+);
+
+// School pickup zone
+await AgRegionMonitor.setupGeofence(
+  latitude: 40.7282,
+  longitude: -73.7949,
+  radius: 100,
+  identifier: 'School',
+  notifyOnEntry: true,
+  notifyOnExit: true,
+  notificationTitle: '🎒 School Zone',
+  notificationBody: 'You\'re at the school pickup area.',
 );
 ```
 
@@ -202,13 +249,13 @@ print('Stopped all monitoring');
 ### Region Management Methods
 
 #### `getActiveRegions()`
-Get all currently active/monitored regions with their details.
+Get all currently active/monitored regions with their details, including custom notification settings.
 
 ```dart
 Future<List<Map<String, dynamic>>> getActiveRegions()
 ```
 
-**Returns:** List of region data with identifier, latitude, longitude, radius, notifyOnEntry, and notifyOnExit
+**Returns:** List of region data with identifier, latitude, longitude, radius, notifyOnEntry, notifyOnExit, and custom notification content
 
 **Example:**
 ```dart
@@ -216,11 +263,16 @@ List<Map<String, dynamic>> regions = await AgRegionMonitor.getActiveRegions();
 for (var region in regions) {
   print('Region: ${region['identifier']} at (${region['latitude']}, ${region['longitude']})');
   print('Radius: ${region['radius']}m, Entry: ${region['notifyOnEntry']}, Exit: ${region['notifyOnExit']}');
+  
+  // Check for custom notification content
+  if (region.containsKey('notificationTitle')) {
+    print('Custom notification: ${region['notificationTitle']} - ${region['notificationBody']}');
+  }
 }
 ```
 
 #### `removeRegion()`
-Remove a specific region by identifier.
+Remove a specific region by identifier and clean up its notification settings.
 
 ```dart
 Future<bool> removeRegion(String identifier)
@@ -232,14 +284,14 @@ Future<bool> removeRegion(String identifier)
 ```dart
 bool success = await AgRegionMonitor.removeRegion('NewYorkOffice');
 if (success) {
-  print('Region removed successfully');
+  print('Region and its notification settings removed successfully');
 } else {
   print('Region not found');
 }
 ```
 
 #### `removeAllRegions()`
-Remove all regions from monitoring.
+Remove all regions from monitoring and clear all notification settings.
 
 ```dart
 Future<bool> removeAllRegions()
@@ -251,7 +303,7 @@ Future<bool> removeAllRegions()
 ```dart
 bool success = await AgRegionMonitor.removeAllRegions();
 if (success) {
-  print('All regions removed');
+  print('All regions and notification settings removed');
 }
 ```
 
@@ -286,7 +338,7 @@ if (isActive) {
 ```
 
 #### `getRegionById()`
-Get region details by identifier.
+Get region details by identifier, including custom notification settings.
 
 ```dart
 Future<Map<String, dynamic>?> getRegionById(String identifier)
@@ -301,6 +353,11 @@ if (region != null) {
   print('Found region: ${region['identifier']}');
   print('Location: (${region['latitude']}, ${region['longitude']})');
   print('Radius: ${region['radius']}m');
+  
+  // Check for custom notifications
+  if (region['notificationTitle'] != null) {
+    print('Custom notification: "${region['notificationTitle']}" - "${region['notificationBody']}"');
+  }
 } else {
   print('Region not found');
 }
@@ -318,11 +375,14 @@ Future<List<String>> getActiveRegionIds()
 List<String> regionIds = await AgRegionMonitor.getActiveRegionIds();
 print('Active regions: ${regionIds.join(', ')}');
 
-// Check each region
+// Check each region with its notification settings
 for (String id in regionIds) {
   Map<String, dynamic>? region = await AgRegionMonitor.getRegionById(id);
   if (region != null) {
     print('$id: (${region['latitude']}, ${region['longitude']})');
+    if (region['notificationTitle'] != null) {
+      print('  Notification: ${region['notificationTitle']}');
+    }
   }
 }
 ```
@@ -396,13 +456,30 @@ Future<bool> hasAlwaysLocationPermission()
 ```
 
 #### `setupKarachiDangerZone()`
-Pre-configured geofence for Karachi (example implementation).
+Pre-configured geofence for Karachi with custom danger zone notification (example implementation).
 
 ```dart
 Future<void> setupKarachiDangerZone()
 ```
 
 **Example:**
+```dart
+// This sets up a danger zone in Karachi with custom notification
+await AgRegionMonitor.setupKarachiDangerZone();
+// Equivalent to:
+// await AgRegionMonitor.setupGeofence(
+//   latitude: 24.8615,
+//   longitude: 67.0099,
+//   radius: 200,
+//   identifier: "KarachiDangerZone",
+//   notifyOnEntry: true,
+//   notifyOnExit: false,
+//   notificationTitle: "⚠️ Danger Zone",
+//   notificationBody: "You've entered a danger zone in Karachi!"
+// );
+```
+
+**Permission checking:**
 ```dart
 // Check permissions before setting up geofencing
 bool hasPermission = await AgRegionMonitor.hasLocationPermission();
@@ -417,6 +494,75 @@ if (!hasPermission) {
 }
 ```
 
+### Advanced Region Management
+
+#### Custom Notification Management
+```dart
+class NotificationManager {
+  
+  // Setup regions with themed notifications
+  static Future<void> setupLocationBasedNotifications() async {
+    // Work locations
+    await AgRegionMonitor.setupGeofence(
+      latitude: 40.7589, longitude: -73.9851, radius: 100,
+      identifier: 'MainOffice',
+      notificationTitle: '💼 Work Mode Activated',
+      notificationBody: 'Welcome to the office! Your meetings and tasks are ready.',
+    );
+    
+    // Personal locations
+    await AgRegionMonitor.setupGeofence(
+      latitude: 40.7505, longitude: -73.9934, radius: 75,
+      identifier: 'Gym',
+      notificationTitle: '🏃‍♂️ Workout Time!',
+      notificationBody: 'Time to achieve your fitness goals. You\'ve got this!',
+    );
+    
+    // Family locations
+    await AgRegionMonitor.setupGeofence(
+      latitude: 40.7282, longitude: -73.7949, radius: 50,
+      identifier: 'Home',
+      notifyOnEntry: true,
+      notifyOnExit: true,
+      notificationTitle: '🏠 Home Sweet Home',
+      notificationBody: 'Welcome home! Time to relax and unwind.',
+    );
+    
+    // Important places with exit notifications
+    await AgRegionMonitor.setupGeofence(
+      latitude: 40.7614, longitude: -73.9776, radius: 200,
+      identifier: 'Hospital',
+      notifyOnEntry: true,
+      notifyOnExit: true,
+      notificationTitle: '🏥 Hospital Area',
+      notificationBody: 'You are near the hospital. Drive carefully and keep quiet.',
+    );
+  }
+  
+  // Update notification for existing region
+  static Future<void> updateRegionNotification(String identifier, String title, String body) async {
+    // Get current region details
+    Map<String, dynamic>? region = await AgRegionMonitor.getRegionById(identifier);
+    if (region != null) {
+      // Remove old region
+      await AgRegionMonitor.removeRegion(identifier);
+      
+      // Re-create with new notification
+      await AgRegionMonitor.setupGeofence(
+        latitude: region['latitude'],
+        longitude: region['longitude'],
+        radius: region['radius'],
+        identifier: identifier,
+        notifyOnEntry: region['notifyOnEntry'],
+        notifyOnExit: region['notifyOnExit'],
+        notificationTitle: title,
+        notificationBody: body,
+      );
+    }
+  }
+}
+```
+
 ### Region Management Examples
 
 ```dart
@@ -424,15 +570,21 @@ if (!hasPermission) {
 class RegionManagementExample {
   
   static Future<void> manageRegions() async {
-    // Setup multiple regions
+    // Setup multiple regions with custom notifications
     await AgRegionMonitor.setupGeofence(
       latitude: 40.7128, longitude: -74.0060, radius: 200,
-      identifier: 'NewYorkOffice', notifyOnEntry: true, notifyOnExit: true,
+      identifier: 'NewYorkOffice',
+      notifyOnEntry: true, notifyOnExit: true,
+      notificationTitle: '🗽 NYC Office',
+      notificationBody: 'You\'ve arrived at the New York office!',
     );
     
     await AgRegionMonitor.setupGeofence(
       latitude: 37.7749, longitude: -122.4194, radius: 150,
-      identifier: 'SanFranciscoOffice', notifyOnEntry: true, notifyOnExit: false,
+      identifier: 'SanFranciscoOffice',
+      notifyOnEntry: true, notifyOnExit: false,
+      notificationTitle: '🌉 SF Office',
+      notificationBody: 'Welcome to San Francisco office!',
     );
     
     // Check what's active
@@ -443,17 +595,18 @@ class RegionManagementExample {
     List<String> regionIds = await AgRegionMonitor.getActiveRegionIds();
     print('Active region IDs: ${regionIds.join(', ')}');
     
-    // Get details for specific region
+    // Get details for specific region including notifications
     Map<String, dynamic>? nyOffice = await AgRegionMonitor.getRegionById('NewYorkOffice');
     if (nyOffice != null) {
       print('NY Office radius: ${nyOffice['radius']}m');
+      print('Notification: ${nyOffice['notificationTitle']} - ${nyOffice['notificationBody']}');
     }
     
     // Check if specific region is active
     bool isNYActive = await AgRegionMonitor.isRegionActive('NewYorkOffice');
     print('NY Office active: $isNYActive');
     
-    // Remove specific region
+    // Remove specific region (also removes its notification settings)
     bool removed = await AgRegionMonitor.removeRegion('SanFranciscoOffice');
     print('SF Office removed: $removed');
     
@@ -461,9 +614,9 @@ class RegionManagementExample {
     count = await AgRegionMonitor.getActiveRegionCount();
     print('Remaining regions: $count');
     
-    // Remove all regions
+    // Remove all regions and notification settings
     await AgRegionMonitor.removeAllRegions();
-    print('All regions removed');
+    print('All regions and notifications removed');
   }
 }
 ```
@@ -471,7 +624,7 @@ class RegionManagementExample {
 ### Event Streams
 
 #### `regionEvents`
-Stream of region enter/exit events.
+Stream of region enter/exit events and monitoring failures.
 
 ```dart
 Stream<Map<String, dynamic>> get regionEvents
@@ -496,24 +649,42 @@ void startListening() {
     String eventType = event['event'];
     String identifier = event['identifier'];
     double timestamp = event['timestamp'];
+    DateTime eventTime = DateTime.fromMillisecondsSinceEpoch((timestamp * 1000).toInt());
     
     switch (eventType) {
       case 'didEnterRegion':
-        print('Entered region: $identifier at ${DateTime.fromMillisecondsSinceEpoch((timestamp * 1000).toInt())}');
-        // Handle entry logic
+        print('Entered region: $identifier at $eventTime');
+        _handleRegionEntry(identifier);
         break;
         
       case 'didExitRegion':
-        print('Exited region: $identifier');
-        // Handle exit logic
+        print('Exited region: $identifier at $eventTime');
+        _handleRegionExit(identifier);
         break;
         
       case 'monitoringDidFail':
         String error = event['error'];
         print('Monitoring failed for $identifier: $error');
+        _handleMonitoringError(identifier, error);
         break;
     }
   });
+}
+
+void _handleRegionEntry(String identifier) {
+  // Custom logic for when user enters a region
+  // The notification is automatically shown by the plugin
+  switch (identifier) {
+    case 'Office':
+      // Start work mode, open productivity apps
+      break;
+    case 'Home':
+      // Enable home automation, set evening mood
+      break;
+    case 'Gym':
+      // Start workout tracking, play energetic music
+      break;
+  }
 }
 
 void stopListening() {
@@ -543,8 +714,9 @@ AgRegionMonitor.locationUpdates.listen((location) {
   double lat = location['latitude'];
   double lng = location['longitude'];
   double timestamp = location['timestamp'];
+  DateTime updateTime = DateTime.fromMillisecondsSinceEpoch((timestamp * 1000).toInt());
   
-  print('Current location: $lat, $lng');
+  print('Current location: $lat, $lng at $updateTime');
   
   // Update your map or location display
   updateMapLocation(lat, lng);
@@ -596,7 +768,7 @@ class _GeofenceDemoState extends State<GeofenceDemo> {
         _locationPermission = locationPermission;
       });
 
-      // Setup geofence
+      // Setup geofence with custom notification
       await AgRegionMonitor.setupGeofence(
         latitude: 37.7749,
         longitude: -122.4194,
@@ -604,6 +776,8 @@ class _GeofenceDemoState extends State<GeofenceDemo> {
         identifier: 'TestOffice',
         notifyOnEntry: true,
         notifyOnExit: true,
+        notificationTitle: '🏢 Test Office',
+        notificationBody: 'Welcome to the test office area! This is a custom notification.',
       );
 
       // Start monitoring

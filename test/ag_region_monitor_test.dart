@@ -34,6 +34,8 @@ class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgR
     required double longitude,
     required double radius,
     required String identifier,
+    String? notificationBody,
+    String? notificationTitle,
     bool notifyOnEntry = true,
     bool notifyOnExit = false,
   }) {

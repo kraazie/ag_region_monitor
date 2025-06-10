@@ -64,6 +64,8 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
         
         let notifyOnEntry = args["notifyOnEntry"] as? Bool ?? true
         let notifyOnExit = args["notifyOnExit"] as? Bool ?? false
+        let notificationTitle = args["notificationTitle"] as? String
+        let notificationBody = args["notificationBody"] as? String
         
         locationManager?.setupCustomGeofence(
             latitude: latitude,
@@ -71,7 +73,9 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
             radius: radius,
             identifier: identifier,
             notifyOnEntry: notifyOnEntry,
-            notifyOnExit: notifyOnExit
+            notifyOnExit: notifyOnExit,
+            notificationTitle: notificationTitle,
+            notificationBody: notificationBody
         )
         
         result(nil)
@@ -152,7 +156,6 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
         result(true)
     }
     
-    // MARK: - Event Sinks
     func setRegionEventSink(_ eventSink: FlutterEventSink?) {
         self.regionEventSink = eventSink
     }
@@ -162,7 +165,6 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
     }
 }
 
-// MARK: - LocationManagerDelegate
 extension AgRegionMonitorPlugin: LocationManagerDelegate {
     func didEnterRegion(_ identifier: String) {
         let eventData: [String: Any] = [
@@ -202,7 +204,6 @@ extension AgRegionMonitorPlugin: LocationManagerDelegate {
     }
 }
 
-// MARK: - Stream Handlers
 class RegionEventStreamHandler: NSObject, FlutterStreamHandler {
     private weak var plugin: AgRegionMonitorPlugin?
     

@@ -26,6 +26,8 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
     required String identifier,
     bool notifyOnEntry = true,
     bool notifyOnExit = false,
+    String? notificationTitle,
+    String? notificationBody,
   }) async {
     try {
       await _channel.invokeMethod('setupGeofence', {
@@ -35,6 +37,8 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
         'identifier': identifier,
         'notifyOnEntry': notifyOnEntry,
         'notifyOnExit': notifyOnExit,
+        'notificationTitle': notificationTitle,
+        'notificationBody': notificationBody,
       });
     } catch (e) {
       debugPrint('Error setting up geofence: $e');
