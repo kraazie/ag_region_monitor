@@ -46,7 +46,14 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
       // Request notification permission
       await AgRegionMonitor.requestNotificationPermission();
 
-      await AgRegionMonitor.setNotificationsEnabled(false);
+      // Enable notifications
+      await AgRegionMonitor.setNotificationsEnabled(true);
+
+      // Enable notification repeat
+      await AgRegionMonitor.setNotificationsRepeatEnabled(true);
+
+      // Set notification repeat timer to 30 seconds
+      await AgRegionMonitor.setNotificationsRepeatTimer(30);
 
       // Setup the default Karachi danger zone
       await AgRegionMonitor.setupKarachiDangerZone();

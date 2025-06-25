@@ -318,6 +318,29 @@ await AgRegionMonitor.setNotificationsEnabled(false);
 await AgRegionMonitor.setNotificationsEnabled(true);
 ```
 
+### `Repeat Notifications Control`
+Enable or Disable repeat notifications which plugin handles internally
+
+```dart
+// Disable repeat notifications
+await AgRegionMonitor.setNotificationsRepeatEnabled(false);
+
+// Re-enable repeat notifications
+await AgRegionMonitor.setNotificationsRepeatEnabled(true);
+```
+
+### `Repeat Notifications Timer`
+Sets the repeat interval (in seconds) for triggering notifications after a user enters a monitored region.  
+By default, this is set to **300 seconds** (5 minutes).
+
+Notifications will **repeat at the specified interval** as long as the user **remains within the region**, and will automatically **stop** once the user **exits the region**.
+
+```dart
+// Set repeat notification interval to 60 seconds (1 minute)
+await AgRegionMonitor.setNotificationsRepeatTimer(60);
+
+```
+
 
 #### `getActiveRegionCount()`
 Get the count of currently active regions.

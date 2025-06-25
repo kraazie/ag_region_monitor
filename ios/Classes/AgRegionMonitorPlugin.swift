@@ -43,6 +43,10 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
             removeAllRegions(result: result)
         case "setNotificationsEnabled":
             setNotificationsEnabled(call: call, result: result)
+        case "setNotificationsRepeatEnabled":
+            setNotificationsRepeatEnabled(call: call, result: result)
+        case "setNotificationsRepeatTimer":
+            setNotificationsRepeatTimer(call: call, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -166,6 +170,28 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
         }
         
         locationManager?.setNotificationsEnabled(enabled)
+        result(nil)
+    }
+
+    private func setNotificationsRepeatEnabled(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+            let enabled = args["enabled"] as? Bool else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+            return
+        }
+        
+        locationManager?.setNotificationsRepeatEnabled(enabled)
+        result(nil)
+    }
+
+    private func setNotificationsRepeatTimer(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+            let timer = args["timer"] as? Int else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+            return
+        }
+        
+        locationManager?.setNotificationsRepeatTimer(timer)
         result(nil)
     }
     

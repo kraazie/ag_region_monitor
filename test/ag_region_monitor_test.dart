@@ -90,6 +90,18 @@ class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgR
     // TODO: implement setNotificationsEnabled
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> setNotificationsRepeatTimer(int timer) {
+    // TODO: implement setNotificationsRepeatTimer
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> setNotificationsRepeatEnabled(bool enabled) {
+    // TODO: implement setNotificationsRepeatEnabled
+    throw UnimplementedError();
+  }
 }
 
 void main() {

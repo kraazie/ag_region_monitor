@@ -14,10 +14,15 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     weak var delegate: LocationManagerDelegate?
     private var notificationContent: [String: [String: String]] = [:]
     private var notificationsEnabled = true
+    private var notificationsRepeatEnabled = true
+    private var notificationsRepeatTimer = 300 // 5 minutes in seconds
     
     // Key for UserDefaults persistence
     private let kNotificationContentKey = "ag_region_monitor_notification_content"
     private let kNotificationsEnabledKey = "ag_region_monitor_notifications_enabled"
+    private let kNotificationsRepeatEnabled = "ag_region_monitor_repeat_enabled"
+    private let kNotificationsRepeatTimer = "ag_region_monitor_notifications_timer"
+    private let notificationIdentifierPrefix = "DangerZoneNotification"
 
     override init() {
         super.init()
@@ -26,6 +31,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         // Load any saved notification content from previous sessions
         loadNotificationContent()
         loadNotificationEnable()
+        loadNotificationsRepeatTimer()
         
         requestNotificationPermission { granted in
             print("Notification permission: \(granted)")
@@ -46,10 +52,22 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         }
     }
 
-      private func loadNotificationEnable() {
-         if let isEnabled = UserDefaults.standard.bool(forKey: kNotificationsEnabledKey) as? Bool {
+    private func loadNotificationEnable() {
+        if let isEnabled = UserDefaults.standard.bool(forKey: kNotificationsEnabledKey) as? Bool {
             notificationsEnabled = isEnabled
             print("Successfully loaded notification enable from UserDefaults.")
+        }
+
+        if let isRepeatEnabled = UserDefaults.standard.bool(forKey: kNotificationsRepeatEnabled) as? Bool {
+            notificationsRepeatEnabled = isRepeatEnabled
+            print("Successfully loaded notification repeat enable from UserDefaults.")
+        }
+    }
+
+    private func loadNotificationsRepeatTimer() {
+         if let timer = UserDefaults.standard.integer(forKey: kNotificationsRepeatTimer) as? Int {
+            notificationsRepeatTimer = timer
+            print("Successfully loaded notification timer from UserDefaults.")
         }
     }
     
@@ -58,6 +76,16 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     func setNotificationsEnabled(_ enabled: Bool) {
         notificationsEnabled = enabled
         UserDefaults.standard.set(enabled, forKey: kNotificationsEnabledKey)
+    }
+
+    func setNotificationsRepeatEnabled(_ enabled: Bool) {
+        notificationsRepeatEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: kNotificationsRepeatEnabled)
+    }
+
+    func setNotificationsRepeatTimer(_ timer: Int) {
+        notificationsRepeatTimer = timer
+        UserDefaults.standard.set(notificationsRepeatTimer, forKey: kNotificationsRepeatTimer)
     }
     
     func requestNotificationPermission(completion: @escaping (Bool) -> Void) {
@@ -94,14 +122,14 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         radius: Double,
         identifier: String,
         notifyOnEntry: Bool = true,
-        notifyOnExit: Bool = false,
+        notifyOnExit: Bool = true,
         notificationTitle: String? = nil,
         notificationBody: String? = nil
     ) {
         let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
         let region = CLCircularRegion(center: center, radius: radius, identifier: identifier)
         region.notifyOnEntry = notifyOnEntry
-        region.notifyOnExit = notifyOnExit
+        region.notifyOnExit = true
         
         // Store custom notification content and save it
         if let title = notificationTitle, let body = notificationBody {
@@ -145,6 +173,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             saveNotificationContent()
         }
         locationManager.stopUpdatingLocation()
+        cancelScheduledNotifications()
         print("Stopped all monitoring")
     }
     
@@ -198,6 +227,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             notificationContent.removeAll()
             saveNotificationContent()
         }
+        cancelScheduledNotifications()
         print("Removed all \(regionCount) regions")
     }
     
@@ -229,12 +259,13 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         print("Entered region: \(region.identifier)")
-        sendLocalNotification(for: region.identifier)
+        scheduleRepeatingNotifications(for: region.identifier)
         delegate?.didEnterRegion(region.identifier)
     }
     
     func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
         print("Exited region: \(region.identifier)")
+        cancelScheduledNotifications()
         delegate?.didExitRegion(region.identifier)
     }
     
@@ -266,6 +297,65 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         content.sound = .default
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
+    }
+
+    private func scheduleRepeatingNotifications(for regionIdentifier: String) {
+
+        
+        // Send immediate local notification
+        sendLocalNotification(for: regionIdentifier)
+
+        guard notificationsRepeatEnabled else { return }
+
+        // Cancel any existing scheduled notifications first
+        cancelScheduledNotifications()
+
+        
+        // Schedule notifications for the next 24 hours (288 notifications every 5 minutes)
+        // iOS allows up to 64 scheduled notifications, so we'll schedule for the next 5 hours
+        let maxNotifications = 60 // 5 hours worth of 5-minute intervals
+        
+        for i in 1...maxNotifications {
+            let content = UNMutableNotificationContent()
+            // content.title = "⚠️ Danger Zone"
+            // content.body = "You are still in the danger zone in Karachi!"
+            content.sound = .default
+
+            if let notification = notificationContent[regionIdentifier],
+               let title = notification["title"],
+               let body = notification["body"] {
+                content.title = title
+                content.body = body
+            } else {
+                content.title = "📍 Region Alert"
+                content.body = "You've entered region: \(regionIdentifier)"
+            }
+            
+            // Schedule notification every 5 minutes (300 seconds)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(i * notificationsRepeatTimer), repeats: false)
+            let identifier = "\(notificationIdentifierPrefix)_\(i)"
+            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+            
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("Error scheduling notification \(i): \(error.localizedDescription)")
+                }
+            }
+        }
+        
+        print("Scheduled \(maxNotifications) background notifications every 5 minutes")
+    }
+    
+    private func cancelScheduledNotifications() {
+        // Get all pending notification identifiers that match our prefix
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let identifiersToCancel = requests
+                .map { $0.identifier }
+                .filter { $0.hasPrefix(self.notificationIdentifierPrefix) }
+            
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiersToCancel)
+            print("Cancelled \(identifiersToCancel.count) scheduled notifications")
+        }
     }
     
 }

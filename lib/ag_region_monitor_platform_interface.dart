@@ -27,7 +27,7 @@ abstract class AgRegionMonitorPlatform extends PlatformInterface {
     required double radius,
     required String identifier,
     bool notifyOnEntry = true,
-    bool notifyOnExit = false,
+    bool notifyOnExit = true,
     String? notificationTitle,
     String? notificationBody,
   });
@@ -49,6 +49,10 @@ abstract class AgRegionMonitorPlatform extends PlatformInterface {
   Future<bool> removeAllRegions();
 
   Future<void> setNotificationsEnabled(bool enabled);
+
+  Future<void> setNotificationsRepeatEnabled(bool enabled);
+
+  Future<void> setNotificationsRepeatTimer(int timer);
 
   Stream<Map<String, dynamic>> get regionEvents;
 

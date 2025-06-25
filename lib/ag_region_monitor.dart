@@ -15,7 +15,7 @@ class AgRegionMonitor {
     required double radius,
     required String identifier,
     bool notifyOnEntry = true,
-    bool notifyOnExit = false,
+    bool notifyOnExit = true,
     String? notificationTitle,
     String? notificationBody,
   }) =>
@@ -47,6 +47,10 @@ class AgRegionMonitor {
 
   static Future<void> setNotificationsEnabled(bool enabled) => _platform.setNotificationsEnabled(enabled);
 
+  static Future<void> setNotificationsRepeatEnabled(bool enabled) => _platform.setNotificationsRepeatEnabled(enabled);
+
+  static Future<void> setNotificationsRepeatTimer(int timer) => _platform.setNotificationsRepeatTimer(timer);
+
   static Stream<Map<String, dynamic>> get regionEvents => _platform.regionEvents;
 
   static Stream<Map<String, dynamic>> get locationUpdates => _platform.locationUpdates;
@@ -58,7 +62,7 @@ class AgRegionMonitor {
         radius: 200,
         identifier: "KarachiDangerZone",
         notifyOnEntry: true,
-        notifyOnExit: false,
+        notifyOnExit: true,
         notificationTitle: "⚠️ Danger Zone",
         notificationBody: "You've entered a danger zone in Karachi!");
   }
