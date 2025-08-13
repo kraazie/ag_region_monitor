@@ -4,7 +4,9 @@ import 'package:ag_region_monitor/ag_region_monitor_platform_interface.dart';
 import 'package:ag_region_monitor/ag_region_monitor_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgRegionMonitorPlatform {
+class MockAgRegionMonitorPlatform
+    with MockPlatformInterfaceMixin
+    implements AgRegionMonitorPlatform {
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
 
@@ -16,7 +18,8 @@ class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgR
 
   @override
   // TODO: implement locationUpdates
-  Stream<Map<String, dynamic>> get locationUpdates => throw UnimplementedError();
+  Stream<Map<String, dynamic>> get locationUpdates =>
+      throw UnimplementedError();
 
   @override
   // TODO: implement regionEvents
@@ -104,14 +107,16 @@ class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgR
   }
 
   @override
-  Future<List<Map<String, dynamic>>> checkManualLocation({required double latitude, required double longitude}) {
+  Future<List<Map<String, dynamic>>> checkManualLocation(
+      {required double latitude, required double longitude}) {
     // TODO: implement checkManualLocation
     throw UnimplementedError();
   }
 }
 
 void main() {
-  final AgRegionMonitorPlatform initialPlatform = AgRegionMonitorPlatform.instance;
+  final AgRegionMonitorPlatform initialPlatform =
+      AgRegionMonitorPlatform.instance;
 
   test('$MethodChannelAgRegionMonitor is the default instance', () {
     expect(initialPlatform, isInstanceOf<MethodChannelAgRegionMonitor>());

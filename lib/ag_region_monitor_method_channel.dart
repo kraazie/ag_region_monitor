@@ -4,8 +4,10 @@ import 'ag_region_monitor_platform_interface.dart';
 
 class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   static const MethodChannel _channel = MethodChannel('ag_region_monitor');
-  static const EventChannel _regionEventChannel = EventChannel('ag_region_monitor/region_events');
-  static const EventChannel _locationEventChannel = EventChannel('ag_region_monitor/location_updates');
+  static const EventChannel _regionEventChannel =
+      EventChannel('ag_region_monitor/region_events');
+  static const EventChannel _locationEventChannel =
+      EventChannel('ag_region_monitor/location_updates');
 
   @override
   Future<bool> initialize() async {
@@ -79,7 +81,8 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   @override
   Future<bool> requestNotificationPermission() async {
     try {
-      final result = await _channel.invokeMethod<bool>('requestNotificationPermission');
+      final result =
+          await _channel.invokeMethod<bool>('requestNotificationPermission');
       return result ?? false;
     } catch (e) {
       debugPrint('Error requesting notification permission: $e');
@@ -90,7 +93,8 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   @override
   Future<String> checkLocationPermission() async {
     try {
-      final result = await _channel.invokeMethod<String>('checkLocationPermission');
+      final result =
+          await _channel.invokeMethod<String>('checkLocationPermission');
       return result ?? 'unknown';
     } catch (e) {
       debugPrint('Error checking location permission: $e');
@@ -103,7 +107,9 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
     try {
       final result = await _channel.invokeMethod<List>('getActiveRegions');
       if (result != null) {
-        return result.map((region) => Map<String, dynamic>.from(region)).toList();
+        return result
+            .map((region) => Map<String, dynamic>.from(region))
+            .toList();
       }
       return [];
     } catch (e) {
@@ -115,7 +121,8 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   @override
   Future<bool> removeRegion(String identifier) async {
     try {
-      final result = await _channel.invokeMethod<bool>('removeRegion', {'identifier': identifier});
+      final result = await _channel
+          .invokeMethod<bool>('removeRegion', {'identifier': identifier});
       return result ?? false;
     } catch (e) {
       debugPrint('Error removing region: $e');
@@ -137,7 +144,8 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   @override
   Future<void> setNotificationsEnabled(bool enabled) async {
     try {
-      await _channel.invokeMethod('setNotificationsEnabled', {'enabled': enabled});
+      await _channel
+          .invokeMethod('setNotificationsEnabled', {'enabled': enabled});
     } catch (e) {
       debugPrint('Error setting notification state: $e');
       rethrow;
@@ -147,7 +155,8 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   @override
   Future<void> setNotificationsRepeatEnabled(bool enabled) async {
     try {
-      await _channel.invokeMethod('setNotificationsRepeatEnabled', {'enabled': enabled});
+      await _channel
+          .invokeMethod('setNotificationsRepeatEnabled', {'enabled': enabled});
     } catch (e) {
       debugPrint('Error setting notification state: $e');
       rethrow;
@@ -157,7 +166,8 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   @override
   Future<void> setNotificationsRepeatTimer(int timer) async {
     try {
-      await _channel.invokeMethod('setNotificationsRepeatTimer', {'timer': timer});
+      await _channel
+          .invokeMethod('setNotificationsRepeatTimer', {'timer': timer});
     } catch (e) {
       debugPrint('Error setting notification state: $e');
       rethrow;
@@ -175,7 +185,9 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
         'longitude': longitude,
       });
       if (result != null) {
-        return result.map((region) => Map<String, dynamic>.from(region)).toList();
+        return result
+            .map((region) => Map<String, dynamic>.from(region))
+            .toList();
       }
       return [];
     } catch (e) {

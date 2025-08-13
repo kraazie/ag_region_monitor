@@ -1,7 +1,8 @@
 import 'ag_region_monitor_platform_interface.dart';
 
 class AgRegionMonitor {
-  static AgRegionMonitorPlatform get _platform => AgRegionMonitorPlatform.instance;
+  static AgRegionMonitorPlatform get _platform =>
+      AgRegionMonitorPlatform.instance;
 
   Future<String?> getPlatformVersion() {
     return AgRegionMonitorPlatform.instance.getPlatformVersion();
@@ -31,25 +32,33 @@ class AgRegionMonitor {
 
   static Future<void> startMonitoring() => _platform.startMonitoring();
 
-  static Future<void> stopMonitoring(String identifier) => _platform.stopMonitoring(identifier);
+  static Future<void> stopMonitoring(String identifier) =>
+      _platform.stopMonitoring(identifier);
 
   static Future<void> stopAllMonitoring() => _platform.stopAllMonitoring();
 
-  static Future<bool> requestNotificationPermission() => _platform.requestNotificationPermission();
+  static Future<bool> requestNotificationPermission() =>
+      _platform.requestNotificationPermission();
 
-  static Future<String> checkLocationPermission() => _platform.checkLocationPermission();
+  static Future<String> checkLocationPermission() =>
+      _platform.checkLocationPermission();
 
-  static Future<List<Map<String, dynamic>>> getActiveRegions() => _platform.getActiveRegions();
+  static Future<List<Map<String, dynamic>>> getActiveRegions() =>
+      _platform.getActiveRegions();
 
-  static Future<bool> removeRegion(String identifier) => _platform.removeRegion(identifier);
+  static Future<bool> removeRegion(String identifier) =>
+      _platform.removeRegion(identifier);
 
   static Future<bool> removeAllRegions() => _platform.removeAllRegions();
 
-  static Future<void> setNotificationsEnabled(bool enabled) => _platform.setNotificationsEnabled(enabled);
+  static Future<void> setNotificationsEnabled(bool enabled) =>
+      _platform.setNotificationsEnabled(enabled);
 
-  static Future<void> setNotificationsRepeatEnabled(bool enabled) => _platform.setNotificationsRepeatEnabled(enabled);
+  static Future<void> setNotificationsRepeatEnabled(bool enabled) =>
+      _platform.setNotificationsRepeatEnabled(enabled);
 
-  static Future<void> setNotificationsRepeatTimer(int timer) => _platform.setNotificationsRepeatTimer(timer);
+  static Future<void> setNotificationsRepeatTimer(int timer) =>
+      _platform.setNotificationsRepeatTimer(timer);
 
   /// Checks if a manual location (latitude, longitude) falls within any active geofence regions
   /// Returns a list of regions that contain the specified location
@@ -60,9 +69,11 @@ class AgRegionMonitor {
   }) =>
       _platform.checkManualLocation(latitude: latitude, longitude: longitude);
 
-  static Stream<Map<String, dynamic>> get regionEvents => _platform.regionEvents;
+  static Stream<Map<String, dynamic>> get regionEvents =>
+      _platform.regionEvents;
 
-  static Stream<Map<String, dynamic>> get locationUpdates => _platform.locationUpdates;
+  static Stream<Map<String, dynamic>> get locationUpdates =>
+      _platform.locationUpdates;
 
   static Future<void> setupKarachiDangerZone() async {
     await setupGeofence(
