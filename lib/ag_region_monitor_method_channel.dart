@@ -165,6 +165,26 @@ class MethodChannelAgRegionMonitor extends AgRegionMonitorPlatform {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> checkManualLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final result = await _channel.invokeMethod<List>('checkManualLocation', {
+        'latitude': latitude,
+        'longitude': longitude,
+      });
+      if (result != null) {
+        return result.map((region) => Map<String, dynamic>.from(region)).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error checking manual location: $e');
+      return [];
+    }
+  }
+
+  @override
   Stream<Map<String, dynamic>> get regionEvents {
     return _regionEventChannel.receiveBroadcastStream().map((event) {
       if (event is Map) {

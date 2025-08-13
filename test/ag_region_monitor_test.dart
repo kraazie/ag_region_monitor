@@ -102,6 +102,12 @@ class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgR
     // TODO: implement setNotificationsRepeatEnabled
     throw UnimplementedError();
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> checkManualLocation({required double latitude, required double longitude}) {
+    // TODO: implement checkManualLocation
+    throw UnimplementedError();
+  }
 }
 
 void main() {

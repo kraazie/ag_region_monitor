@@ -51,6 +51,15 @@ class AgRegionMonitor {
 
   static Future<void> setNotificationsRepeatTimer(int timer) => _platform.setNotificationsRepeatTimer(timer);
 
+  /// Checks if a manual location (latitude, longitude) falls within any active geofence regions
+  /// Returns a list of regions that contain the specified location
+  /// Also sends notifications for matching regions
+  static Future<List<Map<String, dynamic>>> checkManualLocation({
+    required double latitude,
+    required double longitude,
+  }) =>
+      _platform.checkManualLocation(latitude: latitude, longitude: longitude);
+
   static Stream<Map<String, dynamic>> get regionEvents => _platform.regionEvents;
 
   static Stream<Map<String, dynamic>> get locationUpdates => _platform.locationUpdates;
@@ -99,5 +108,32 @@ class AgRegionMonitor {
   static Future<List<String>> getActiveRegionIds() async {
     final regions = await getActiveRegions();
     return regions.map((region) => region['identifier'] as String).toList();
+  }
+
+  /// Checks if a location is within any active regions and returns matching regions
+  /// This is a convenience method that wraps checkManualLocation
+  static Future<bool> isLocationInAnyRegion({
+    required double latitude,
+    required double longitude,
+  }) async {
+    final matchingRegions = await checkManualLocation(
+      latitude: latitude,
+      longitude: longitude,
+    );
+    return matchingRegions.isNotEmpty;
+  }
+
+  /// Gets all regions that contain the specified location without triggering notifications
+  /// This could be implemented in the future for read-only location checks
+  static Future<List<Map<String, dynamic>>> getRegionsContainingLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    // For now, this uses the same method as checkManualLocation
+    // In the future, you could add a separate native method that doesn't trigger notifications
+    return await checkManualLocation(
+      latitude: latitude,
+      longitude: longitude,
+    );
   }
 }

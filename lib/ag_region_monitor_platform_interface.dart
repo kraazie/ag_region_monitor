@@ -54,6 +54,11 @@ abstract class AgRegionMonitorPlatform extends PlatformInterface {
 
   Future<void> setNotificationsRepeatTimer(int timer);
 
+  Future<List<Map<String, dynamic>>> checkManualLocation({
+    required double latitude,
+    required double longitude,
+  });
+
   Stream<Map<String, dynamic>> get regionEvents;
 
   Stream<Map<String, dynamic>> get locationUpdates;

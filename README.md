@@ -1059,6 +1059,228 @@ class RegionManager {
 }
 ```
 
+# Manual Location Check Functions
+
+## Overview
+
+The Manual Location Check functionality allows you to programmatically check if specific coordinates fall within any of your active geofence regions. This is useful for scenarios where you want to validate locations without relying on automatic location updates.
+
+## Functions
+
+### `checkManualLocation`
+
+The primary function for checking if coordinates fall within active geofence regions.
+
+#### Signature
+```dart
+static Future<List<Map<String, dynamic>>> checkManualLocation({
+  required double latitude,
+  required double longitude,
+})
+```
+
+#### Parameters
+- **`latitude`** (required): The latitude coordinate to check
+- **`longitude`** (required): The longitude coordinate to check
+
+#### Returns
+A `Future<List<Map<String, dynamic>>>` containing all regions that contain the specified coordinates. Each region object includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `identifier` | `String` | Unique identifier for the region |
+| `latitude` | `double` | Center latitude of the region |
+| `longitude` | `double` | Center longitude of the region |
+| `radius` | `double` | Radius of the region in meters |
+| `notifyOnEntry` | `bool` | Whether notifications are enabled for entry |
+| `notifyOnExit` | `bool` | Whether notifications are enabled for exit |
+| `distance` | `double` | Distance from input coordinates to region center (in meters) |
+| `notificationTitle` | `String?` | Custom notification title (if set) |
+| `notificationBody` | `String?` | Custom notification body (if set) |
+
+#### Behavior
+- Calculates distance from input coordinates to each active region's center
+- If distance ≤ radius, the region is considered a match
+- **Automatically sends notifications** for all matching regions
+- Returns detailed information about all matching regions
+
+#### Example
+```dart
+final matchingRegions = await AgRegionMonitor.checkManualLocation(
+  latitude: 24.8615,
+  longitude: 67.0099,
+);
+
+print('Found ${matchingRegions.length} matching regions');
+for (var region in matchingRegions) {
+  print('Region: ${region['identifier']}');
+  print('Distance: ${region['distance'].toStringAsFixed(2)} meters');
+  print('Radius: ${region['radius']} meters');
+}
+```
+
+---
+
+### `isLocationInAnyRegion`
+
+A convenience function that returns a boolean indicating whether coordinates fall within any active region.
+
+#### Signature
+```dart
+static Future<bool> isLocationInAnyRegion({
+  required double latitude,
+  required double longitude,
+})
+```
+
+#### Parameters
+- **`latitude`** (required): The latitude coordinate to check
+- **`longitude`** (required): The longitude coordinate to check
+
+#### Returns
+A `Future<bool>` that resolves to:
+- `true` if the coordinates fall within at least one active region
+- `false` if the coordinates don't fall within any active region
+
+#### Behavior
+- Internally calls `checkManualLocation`
+- **Will trigger notifications** for matching regions
+- Returns `true` if any regions match
+
+#### Example
+```dart
+final isInDangerZone = await AgRegionMonitor.isLocationInAnyRegion(
+  latitude: 24.8615,
+  longitude: 67.0099,
+);
+
+if (isInDangerZone) {
+  print('Location is within a monitored region');
+} else {
+  print('Location is safe');
+}
+```
+
+---
+
+### `getRegionsContainingLocation`
+
+An alias for `checkManualLocation` that provides semantic clarity for read-only operations.
+
+#### Signature
+```dart
+static Future<List<Map<String, dynamic>>> getRegionsContainingLocation({
+  required double latitude,
+  required double longitude,
+})
+```
+
+#### Parameters
+- **`latitude`** (required): The latitude coordinate to check
+- **`longitude`** (required): The longitude coordinate to check
+
+#### Returns
+Same as `checkManualLocation` - a list of matching region objects.
+
+#### Behavior
+- Currently identical to `checkManualLocation`
+- **Will trigger notifications** for matching regions
+- Future versions may support read-only mode
+
+#### Example
+```dart
+final regions = await AgRegionMonitor.getRegionsContainingLocation(
+  latitude: 24.8615,
+  longitude: 67.0099,
+);
+
+for (var region in regions) {
+  print('Found in region: ${region['identifier']}');
+}
+```
+
+## Usage Patterns
+
+### Basic Location Validation
+```dart
+// Check if a user-entered address is in a danger zone
+final coordinates = await geocodeAddress(userAddress);
+final isInDangerZone = await AgRegionMonitor.isLocationInAnyRegion(
+  latitude: coordinates.latitude,
+  longitude: coordinates.longitude,
+);
+```
+
+### Detailed Region Analysis
+```dart
+// Get detailed information about which regions contain a location
+final regions = await AgRegionMonitor.checkManualLocation(
+  latitude: 24.8615,
+  longitude: 67.0099,
+);
+
+for (var region in regions) {
+  final distance = region['distance'] as double;
+  final radius = region['radius'] as double;
+  final percentage = (distance / radius * 100).toStringAsFixed(1);
+  
+  print('${region['identifier']}: ${percentage}% into region');
+}
+```
+
+### Bulk Location Processing
+```dart
+// Check multiple locations
+final locations = [
+  {'lat': 24.8615, 'lng': 67.0099, 'name': 'Location A'},
+  {'lat': 24.8700, 'lng': 67.0200, 'name': 'Location B'},
+];
+
+for (var location in locations) {
+  final isInRegion = await AgRegionMonitor.isLocationInAnyRegion(
+    latitude: location['lat'],
+    longitude: location['lng'],
+  );
+  
+  print('${location['name']}: ${isInRegion ? 'ALERT' : 'Safe'}');
+}
+```
+
+## Important Notes
+
+### Notifications
+- ⚠️ **All manual location check functions will trigger notifications** if the coordinates fall within active regions
+- Notifications respect the current notification settings (`notificationsEnabled`)
+- Custom notification titles and bodies are used if configured for the region
+
+### Performance
+- Functions perform distance calculations for all active regions
+- Consider caching results if checking the same coordinates repeatedly
+- No limit on the number of regions that can match
+
+### Accuracy
+- Uses standard geographic distance calculations (haversine formula via CoreLocation)
+- Accuracy depends on the precision of input coordinates
+- Results are in meters
+
+### Error Handling
+```dart
+try {
+  final regions = await AgRegionMonitor.checkManualLocation(
+    latitude: invalidLat,
+    longitude: invalidLng,
+  );
+} catch (e) {
+  print('Error checking location: $e');
+  // Handle error (invalid coordinates, plugin not initialized, etc.)
+}
+```
+
+### Prerequisites
+- Plugin must be initialized with `AgRegionMonitor.initialize()`
+- At least one geofence region must be active
+- Notification permissions recommended for full functionality
+
 ## Limitations
 
 - **iOS Only**: Currently only supports iOS. Android support is planned.

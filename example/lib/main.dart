@@ -135,6 +135,21 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Custom region added!')));
   }
 
+  Future<void> _checkManualLocation() async {
+    // Example: Check the current manual location
+    var latitude = 24.8615; // Karachi coordinates
+    var longitude = 67.0099; // Karachi coordinates
+
+    try {
+      final location = await AgRegionMonitor.checkManualLocation(latitude: latitude, longitude: longitude);
+
+      print(location);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Manual location: ${location.first}')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error getting manual location: $e')));
+    }
+  }
+
   // // Example: Get all active regions and display them
   // static Future<void> displayActiveRegions() async {
   //   try {
@@ -253,6 +268,14 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                     child: Text('Stop All'),
                   ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(onPressed: _checkManualLocation, child: Text('Check Manual Location')),
                 ),
               ],
             ),

@@ -47,6 +47,8 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
             setNotificationsRepeatEnabled(call: call, result: result)
         case "setNotificationsRepeatTimer":
             setNotificationsRepeatTimer(call: call, result: result)
+        case "checkManualLocation":
+            checkManualLocation(call: call, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -193,6 +195,23 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
         
         locationManager?.setNotificationsRepeatTimer(timer)
         result(nil)
+    }
+    
+    private func checkManualLocation(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let latitude = args["latitude"] as? Double,
+              let longitude = args["longitude"] as? Double else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for checkManualLocation", details: nil))
+            return
+        }
+        
+        guard let locationManager = locationManager else {
+            result(FlutterError(code: "LOCATION_MANAGER_NOT_INITIALIZED", message: "Location manager not initialized", details: nil))
+            return
+        }
+        
+        let matchingRegions = locationManager.checkManualLocation(latitude: latitude, longitude: longitude)
+        result(matchingRegions)
     }
     
     func setRegionEventSink(_ eventSink: FlutterEventSink?) {

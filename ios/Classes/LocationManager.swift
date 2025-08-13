@@ -231,6 +231,53 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         print("Removed all \(regionCount) regions")
     }
     
+    // MARK: - Manual Location Check
+    
+    func checkManualLocation(latitude: Double, longitude: Double) -> [[String: Any]] {
+        let inputLocation = CLLocation(latitude: latitude, longitude: longitude)
+        var matchingRegions: [[String: Any]] = []
+        
+        for region in locationManager.monitoredRegions {
+            if let circularRegion = region as? CLCircularRegion {
+                let regionCenter = CLLocation(
+                    latitude: circularRegion.center.latitude,
+                    longitude: circularRegion.center.longitude
+                )
+                
+                let distance = inputLocation.distance(from: regionCenter)
+                
+                if distance <= circularRegion.radius {
+                    // Location is within this region
+                    var regionData: [String: Any] = [
+                        "identifier": region.identifier,
+                        "latitude": circularRegion.center.latitude,
+                        "longitude": circularRegion.center.longitude,
+                        "radius": circularRegion.radius,
+                        "notifyOnEntry": region.notifyOnEntry,
+                        "notifyOnExit": region.notifyOnExit,
+                        "distance": distance
+                    ]
+                    
+                    if let content = notificationContent[region.identifier] {
+                        regionData["notificationTitle"] = content["title"]
+                        regionData["notificationBody"] = content["body"]
+                    }
+                    
+                    matchingRegions.append(regionData)
+                    
+                    // Send notification for this region
+                    sendLocalNotification(for: region.identifier)
+                    
+                    print("Manual location check: Found match in region \(region.identifier), distance: \(distance)m")
+                }
+            }
+        }
+        
+        print("Manual location check: Found \(matchingRegions.count) matching regions for location (\(latitude), \(longitude))")
+        
+        return matchingRegions
+    }
+    
     // MARK: - CLLocationManagerDelegate
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
