@@ -4,9 +4,7 @@ import 'package:ag_region_monitor/ag_region_monitor_platform_interface.dart';
 import 'package:ag_region_monitor/ag_region_monitor_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-class MockAgRegionMonitorPlatform
-    with MockPlatformInterfaceMixin
-    implements AgRegionMonitorPlatform {
+class MockAgRegionMonitorPlatform with MockPlatformInterfaceMixin implements AgRegionMonitorPlatform {
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
 
@@ -18,8 +16,7 @@ class MockAgRegionMonitorPlatform
 
   @override
   // TODO: implement locationUpdates
-  Stream<Map<String, dynamic>> get locationUpdates =>
-      throw UnimplementedError();
+  Stream<Map<String, dynamic>> get locationUpdates => throw UnimplementedError();
 
   @override
   // TODO: implement regionEvents
@@ -33,12 +30,14 @@ class MockAgRegionMonitorPlatform
 
   @override
   Future<void> setupGeofence({
+    required String identifier,
     required double latitude,
     required double longitude,
     required double radius,
-    required String identifier,
-    String? notificationBody,
-    String? notificationTitle,
+    String? notificationBodyEnter,
+    String? notificationBodyExit,
+    String? notificationTitleEnter,
+    String? notificationTitleExit,
     bool notifyOnEntry = true,
     bool notifyOnExit = false,
   }) {
@@ -107,16 +106,14 @@ class MockAgRegionMonitorPlatform
   }
 
   @override
-  Future<List<Map<String, dynamic>>> checkManualLocation(
-      {required double latitude, required double longitude}) {
+  Future<List<Map<String, dynamic>>> checkManualLocation({required double latitude, required double longitude}) {
     // TODO: implement checkManualLocation
     throw UnimplementedError();
   }
 }
 
 void main() {
-  final AgRegionMonitorPlatform initialPlatform =
-      AgRegionMonitorPlatform.instance;
+  final AgRegionMonitorPlatform initialPlatform = AgRegionMonitorPlatform.instance;
 
   test('$MethodChannelAgRegionMonitor is the default instance', () {
     expect(initialPlatform, isInstanceOf<MethodChannelAgRegionMonitor>());

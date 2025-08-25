@@ -34,3 +34,6 @@
 - Set botification title and body for didEnterRegion and didExitRegion separately
 - Notifications now appear in the foreground also
 - Bug fix for all repeating notifications getting cancelled on didExitRegion
+
+## 1.0.7
+- Banner error fix
