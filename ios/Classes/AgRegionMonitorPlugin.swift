@@ -72,8 +72,10 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
         
         let notifyOnEntry = args["notifyOnEntry"] as? Bool ?? true
         let notifyOnExit = args["notifyOnExit"] as? Bool ?? false
-        let notificationTitle = args["notificationTitle"] as? String
-        let notificationBody = args["notificationBody"] as? String
+        let notificationTitleEnter = args["notificationTitleEnter"] as? String
+        let notificationBodyEnter = args["notificationBodyEnter"] as? String
+        let notificationTitleExit = args["notificationTitleExit"] as? String
+        let notificationBodyExit = args["notificationBodyExit"] as? String
         
         locationManager?.setupCustomGeofence(
             latitude: latitude,
@@ -82,8 +84,10 @@ public class AgRegionMonitorPlugin: NSObject, FlutterPlugin {
             identifier: identifier,
             notifyOnEntry: notifyOnEntry,
             notifyOnExit: notifyOnExit,
-            notificationTitle: notificationTitle,
-            notificationBody: notificationBody
+            notificationTitleEnter: notificationTitleEnter,
+            notificationBodyEnter: notificationBodyEnter,
+            notificationTitleExit: notificationTitleExit,
+            notificationBodyExit: notificationBodyExit
         )
         
         result(nil)

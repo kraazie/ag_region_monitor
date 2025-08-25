@@ -52,8 +52,8 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
       // Enable notification repeat
       await AgRegionMonitor.setNotificationsRepeatEnabled(true);
 
-      // Set notification repeat timer to 30 seconds
-      await AgRegionMonitor.setNotificationsRepeatTimer(30);
+      // Set notification repeat timer to 15 seconds
+      await AgRegionMonitor.setNotificationsRepeatTimer(15);
 
       // Setup the default Karachi danger zone
       await AgRegionMonitor.setupKarachiDangerZone();

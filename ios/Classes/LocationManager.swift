@@ -12,13 +12,15 @@ protocol LocationManagerDelegate: AnyObject {
 class LocationManager: NSObject, CLLocationManagerDelegate {
     private var locationManager = CLLocationManager()
     weak var delegate: LocationManagerDelegate?
-    private var notificationContent: [String: [String: String]] = [:]
+    private var notificationContentEnter: [String: [String: String]] = [:]
+    private var notificationContentExit: [String: [String: String]] = [:]
     private var notificationsEnabled = true
     private var notificationsRepeatEnabled = true
     private var notificationsRepeatTimer = 300 // 5 minutes in seconds
     
     // Key for UserDefaults persistence
-    private let kNotificationContentKey = "ag_region_monitor_notification_content"
+    private let kNotificationContentEnterKey = "ag_region_monitor_notification_content_enter"
+    private let kNotificationContentExitKey = "ag_region_monitor_notification_content_exit"
     private let kNotificationsEnabledKey = "ag_region_monitor_notifications_enabled"
     private let kNotificationsRepeatEnabled = "ag_region_monitor_repeat_enabled"
     private let kNotificationsRepeatTimer = "ag_region_monitor_notifications_timer"
@@ -28,7 +30,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         super.init()
         locationManager.delegate = self
         
-        // 🔑 Set self as notification center delegate
+        // 🔒 Set self as notification center delegate
         UNUserNotificationCenter.current().delegate = self
         
         // Load any saved notification content from previous sessions
@@ -45,13 +47,19 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     // MARK: - Persistence
     
     private func saveNotificationContent() {
-        UserDefaults.standard.set(notificationContent, forKey: kNotificationContentKey)
+        UserDefaults.standard.set(notificationContentEnter, forKey: kNotificationContentEnterKey)
+        UserDefaults.standard.set(notificationContentExit, forKey: kNotificationContentExitKey)
     }
     
     private func loadNotificationContent() {
-        if let savedContent = UserDefaults.standard.dictionary(forKey: kNotificationContentKey) as? [String: [String: String]] {
-            notificationContent = savedContent
-            print("Successfully loaded notification content from UserDefaults.")
+        if let savedContentEnter = UserDefaults.standard.dictionary(forKey: kNotificationContentEnterKey) as? [String: [String: String]] {
+            notificationContentEnter = savedContentEnter
+            print("Successfully loaded notification enter content from UserDefaults.")
+        }
+        
+        if let savedContentExit = UserDefaults.standard.dictionary(forKey: kNotificationContentExitKey) as? [String: [String: String]] {
+            notificationContentExit = savedContentExit
+            print("Successfully loaded notification exit content from UserDefaults.")
         }
     }
 
@@ -126,19 +134,28 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         identifier: String,
         notifyOnEntry: Bool = true,
         notifyOnExit: Bool = true,
-        notificationTitle: String? = nil,
-        notificationBody: String? = nil
+        notificationTitleEnter: String? = nil,
+        notificationBodyEnter: String? = nil,
+        notificationTitleExit: String? = nil,
+        notificationBodyExit: String? = nil
     ) {
         let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
         let region = CLCircularRegion(center: center, radius: radius, identifier: identifier)
         region.notifyOnEntry = notifyOnEntry
-        region.notifyOnExit = true
+        region.notifyOnExit = notifyOnExit
         
-        // Store custom notification content and save it
-        if let title = notificationTitle, let body = notificationBody {
-            notificationContent[identifier] = ["title": title, "body": body]
-            saveNotificationContent()
+        // Store custom notification content for entry and save it
+        if let titleEnter = notificationTitleEnter, let bodyEnter = notificationBodyEnter {
+            notificationContentEnter[identifier] = ["title": titleEnter, "body": bodyEnter]
         }
+        
+        // Store custom notification content for exit and save it
+        if let titleExit = notificationTitleExit, let bodyExit = notificationBodyExit {
+            notificationContentExit[identifier] = ["title": titleExit, "body": bodyExit]
+        }
+        
+        // Save the updated notification content
+        saveNotificationContent()
         
         locationManager.startMonitoring(for: region)
         print("Geofence set for \(identifier) at (\(latitude), \(longitude)) with radius \(radius)m")
@@ -157,7 +174,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             if region.identifier == identifier {
                 locationManager.stopMonitoring(for: region)
                 // Remove the associated notification content and save changes
-                if notificationContent.removeValue(forKey: identifier) != nil {
+                if notificationContentEnter.removeValue(forKey: identifier) != nil ||
+                   notificationContentExit.removeValue(forKey: identifier) != nil {
                     saveNotificationContent()
                 }
                 print("Stopped monitoring region: \(identifier)")
@@ -171,8 +189,9 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             locationManager.stopMonitoring(for: region)
         }
         // Clear all notification content and save changes
-        if !notificationContent.isEmpty {
-            notificationContent.removeAll()
+        if !notificationContentEnter.isEmpty || !notificationContentExit.isEmpty {
+            notificationContentEnter.removeAll()
+            notificationContentExit.removeAll()
             saveNotificationContent()
         }
         locationManager.stopUpdatingLocation()
@@ -194,10 +213,19 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
                     "notifyOnEntry": region.notifyOnEntry,
                     "notifyOnExit": region.notifyOnExit
                 ]
-                if let content = notificationContent[region.identifier] {
-                    regionData["notificationTitle"] = content["title"]
-                    regionData["notificationBody"] = content["body"]
+                
+                // Add enter notification content if available
+                if let contentEnter = notificationContentEnter[region.identifier] {
+                    regionData["notificationTitleEnter"] = contentEnter["title"]
+                    regionData["notificationBodyEnter"] = contentEnter["body"]
                 }
+                
+                // Add exit notification content if available
+                if let contentExit = notificationContentExit[region.identifier] {
+                    regionData["notificationTitleExit"] = contentExit["title"]
+                    regionData["notificationBodyExit"] = contentExit["body"]
+                }
+                
                 regions.append(regionData)
             }
         }
@@ -209,7 +237,9 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             if region.identifier == identifier {
                 locationManager.stopMonitoring(for: region)
                 // Remove notification content and save
-                if notificationContent.removeValue(forKey: identifier) != nil {
+                let removedEnter = notificationContentEnter.removeValue(forKey: identifier) != nil
+                let removedExit = notificationContentExit.removeValue(forKey: identifier) != nil
+                if removedEnter || removedExit {
                     saveNotificationContent()
                 }
                 print("Removed region: \(identifier)")
@@ -226,8 +256,9 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             locationManager.stopMonitoring(for: region)
         }
         // Clear all notification content and save
-        if !notificationContent.isEmpty {
-            notificationContent.removeAll()
+        if !notificationContentEnter.isEmpty || !notificationContentExit.isEmpty {
+            notificationContentEnter.removeAll()
+            notificationContentExit.removeAll()
             saveNotificationContent()
         }
         cancelScheduledNotifications()
@@ -261,15 +292,22 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
                         "distance": distance
                     ]
                     
-                    if let content = notificationContent[region.identifier] {
-                        regionData["notificationTitle"] = content["title"]
-                        regionData["notificationBody"] = content["body"]
+                    // Add enter notification content if available
+                    if let contentEnter = notificationContentEnter[region.identifier] {
+                        regionData["notificationTitleEnter"] = contentEnter["title"]
+                        regionData["notificationBodyEnter"] = contentEnter["body"]
+                    }
+                    
+                    // Add exit notification content if available
+                    if let contentExit = notificationContentExit[region.identifier] {
+                        regionData["notificationTitleExit"] = contentExit["title"]
+                        regionData["notificationBodyExit"] = contentExit["body"]
                     }
                     
                     matchingRegions.append(regionData)
                     
-                    // Send notification for this region
-                    sendLocalNotification(for: region.identifier)
+                    // Send notification for this region (entry notification for manual check)
+                    sendLocalNotification(for: region.identifier, isEntry: true)
                     
                     print("Manual location check: Found match in region \(region.identifier), distance: \(distance)m")
                 }
@@ -309,13 +347,15 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         print("Entered region: \(region.identifier)")
-        scheduleRepeatingNotifications(for: region.identifier)
+        scheduleRepeatingNotifications(for: region.identifier, isEntry: true)
         delegate?.didEnterRegion(region.identifier)
     }
     
     func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
         print("Exited region: \(region.identifier)")
         cancelScheduledNotifications(for: region.identifier)
+        // Send exit notification
+        sendLocalNotification(for: region.identifier, isEntry: false)
         delegate?.didExitRegion(region.identifier)
     }
     
@@ -329,19 +369,31 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         delegate?.monitoringDidFail(region?.identifier, error.localizedDescription)
     }
     
-    private func sendLocalNotification(for regionIdentifier: String) {
+    private func sendLocalNotification(for regionIdentifier: String, isEntry: Bool) {
         guard notificationsEnabled else { return }
         
         let content = UNMutableNotificationContent()
         
-        if let notification = notificationContent[regionIdentifier],
-           let title = notification["title"],
-           let body = notification["body"] {
-            content.title = title
-            content.body = body
+        if isEntry {
+            if let notification = notificationContentEnter[regionIdentifier],
+               let title = notification["title"],
+               let body = notification["body"] {
+                content.title = title
+                content.body = body
+            } else {
+                content.title = "🏃 Region Alert"
+                content.body = "You've entered region: \(regionIdentifier)"
+            }
         } else {
-            content.title = "📍 Region Alert"
-            content.body = "You've entered region: \(regionIdentifier)"
+            if let notification = notificationContentExit[regionIdentifier],
+               let title = notification["title"],
+               let body = notification["body"] {
+                content.title = title
+                content.body = body
+            } else {
+                content.title = "🚪 Region Alert"
+                content.body = "You've exited region: \(regionIdentifier)"
+            }
         }
         
         content.sound = .default
@@ -349,17 +401,14 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         UNUserNotificationCenter.current().add(request)
     }
 
-    private func scheduleRepeatingNotifications(for regionIdentifier: String) {
-
-        
+    private func scheduleRepeatingNotifications(for regionIdentifier: String, isEntry: Bool) {
         // Send immediate local notification
-        sendLocalNotification(for: regionIdentifier)
+        sendLocalNotification(for: regionIdentifier, isEntry: isEntry)
 
         guard notificationsRepeatEnabled else { return }
 
         // Cancel any existing scheduled notifications first
         cancelScheduledNotifications()
-
         
         // Schedule notifications for the next 24 hours (288 notifications every 5 minutes)
         // iOS allows up to 64 scheduled notifications, so we'll schedule for the next 5 hours
@@ -367,21 +416,20 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         
         for i in 1...maxNotifications {
             let content = UNMutableNotificationContent()
-            // content.title = "⚠️ Danger Zone"
-            // content.body = "You are still in the danger zone in Karachi!"
             content.sound = .default
 
-            if let notification = notificationContent[regionIdentifier],
+            // Use entry notification content for repeating notifications (since user is inside)
+            if let notification = notificationContentEnter[regionIdentifier],
                let title = notification["title"],
                let body = notification["body"] {
                 content.title = title
                 content.body = body
             } else {
-                content.title = "📍 Region Alert"
-                content.body = "You've entered region: \(regionIdentifier)"
+                content.title = "🏃 Region Alert"
+                content.body = "You are still in region: \(regionIdentifier)"
             }
             
-            // Schedule notification every 5 minutes (300 seconds)
+            // Schedule notification every X minutes (based on notificationsRepeatTimer)
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(i * notificationsRepeatTimer), repeats: false)
             let identifier = "\(notificationIdentifierPrefix)_\(regionIdentifier)_\(i)"
             let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
@@ -393,7 +441,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             }
         }
         
-        print("Scheduled \(maxNotifications) background notifications every 5 minutes")
+        print("Scheduled \(maxNotifications) background notifications every \(notificationsRepeatTimer) seconds")
     }
     
     private func cancelScheduledNotifications() {

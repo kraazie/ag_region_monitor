@@ -29,3 +29,8 @@
 ### Enhanced
 - Improved location validation with detailed region information
 - Added comprehensive region data including distance from center
+
+## 1.0.6
+- Set botification title and body for didEnterRegion and didExitRegion separately
+- Notifications now appear in the foreground also
+- Bug fix for all repeating notifications getting cancelled on didExitRegion

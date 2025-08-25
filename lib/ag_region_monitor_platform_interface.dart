@@ -28,8 +28,10 @@ abstract class AgRegionMonitorPlatform extends PlatformInterface {
     required String identifier,
     bool notifyOnEntry = true,
     bool notifyOnExit = true,
-    String? notificationTitle,
-    String? notificationBody,
+    String? notificationTitleEnter,
+    String? notificationBodyEnter,
+    String? notificationTitleExit,
+    String? notificationBodyExit,
   });
 
   Future<void> startMonitoring();
