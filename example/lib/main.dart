@@ -88,14 +88,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
 
         // Show snackbar for region events
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_lastEvent),
-              backgroundColor: event['event'] == 'didEnterRegion'
-                  ? Colors.red
-                  : Colors.green,
-            ),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_lastEvent), backgroundColor: event['event'] == 'didEnterRegion' ? Colors.red : Colors.green));
         }
       },
       onError: (error) {
@@ -128,10 +121,10 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
   Future<void> _addCustomRegion() async {
     // Example: Add a custom region around a specific location
     await AgRegionMonitor.setupGeofence(
-      latitude: 24.8700, // Different location in Karachi
-      longitude: 67.0300,
+      latitude: 37.332407, // Different location Apple Park
+      longitude: -122.030469,
       radius: 150,
-      identifier: 'CustomZone1',
+      identifier: 'AppleParkZone',
       notifyOnEntry: true,
       notifyOnExit: true,
     );
@@ -139,9 +132,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
     // Get active regions list again..!!
     _loadActiveRegionCards();
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Custom region added!')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Custom region added!')));
   }
 
   Future<void> _checkManualLocation() async {
@@ -150,19 +141,12 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
     var longitude = 67.0099; // Karachi coordinates
 
     try {
-      final location = await AgRegionMonitor.checkManualLocation(
-        latitude: latitude,
-        longitude: longitude,
-      );
+      final location = await AgRegionMonitor.checkManualLocation(latitude: latitude, longitude: longitude);
 
       print(location);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Manual location: ${location.first}')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Manual location: ${location.first}')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error getting manual location: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error getting manual location: $e')));
     }
   }
 
@@ -201,14 +185,9 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Region ID: ${region['identifier']}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  Text('Region ID: ${region['identifier']}', style: TextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 4),
-                  Text(
-                    'Location: ${region['latitude']}, ${region['longitude']}',
-                  ),
+                  Text('Location: ${region['latitude']}, ${region['longitude']}'),
                   Text('Radius: ${region['radius']} m'),
                   Text('Notify on Entry: ${region['notifyOnEntry']}'),
                   Text('Notify on Exit: ${region['notifyOnExit']}'),
@@ -222,10 +201,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
       cards.add(
         Card(
           color: Colors.red[100],
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Text('Error getting active regions: $e'),
-          ),
+          child: Padding(padding: const EdgeInsets.all(12.0), child: Text('Error getting active regions: $e')),
         ),
       );
     }
@@ -236,10 +212,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Region Monitor Demo'),
-        backgroundColor: Colors.blue,
-      ),
+      appBar: AppBar(title: Text('Region Monitor Demo'), backgroundColor: Colors.blue),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -251,13 +224,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Status',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text('Status', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     SizedBox(height: 8),
                     Text('Initialized: ${_isInitialized ? 'Yes' : 'No'}'),
                     Text('Current Location: $_currentLocation'),
@@ -283,32 +250,22 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
             //   ),
             // ),
             SizedBox(height: 20),
-            Text(
-              'Active Regions:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text('Active Regions:', style: TextStyle(fontWeight: FontWeight.bold)),
             for (var card in _activeRegionCards) card, // << your for-loop here
             SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: _addCustomRegion,
-                    child: Text('Add Custom Region'),
-                  ),
+                  child: ElevatedButton(onPressed: _addCustomRegion, child: Text('Add Custom Region')),
                 ),
                 SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
                       await AgRegionMonitor.stopAllMonitoring();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('All monitoring stopped')),
-                      );
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('All monitoring stopped')));
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                     child: Text('Stop All'),
                   ),
                 ),
@@ -318,10 +275,7 @@ class _RegionMonitorExampleState extends State<RegionMonitorExample> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: _checkManualLocation,
-                    child: Text('Check Manual Location'),
-                  ),
+                  child: ElevatedButton(onPressed: _checkManualLocation, child: Text('Check Manual Location')),
                 ),
               ],
             ),

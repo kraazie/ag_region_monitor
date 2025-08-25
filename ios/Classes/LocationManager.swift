@@ -28,6 +28,9 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         super.init()
         locationManager.delegate = self
         
+        // 🔑 Set self as notification center delegate
+        UNUserNotificationCenter.current().delegate = self
+        
         // Load any saved notification content from previous sessions
         loadNotificationContent()
         loadNotificationEnable()
@@ -312,7 +315,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
         print("Exited region: \(region.identifier)")
-        cancelScheduledNotifications()
+        cancelScheduledNotifications(for: region.identifier)
         delegate?.didExitRegion(region.identifier)
     }
     
@@ -380,7 +383,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             
             // Schedule notification every 5 minutes (300 seconds)
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(i * notificationsRepeatTimer), repeats: false)
-            let identifier = "\(notificationIdentifierPrefix)_\(i)"
+            let identifier = "\(notificationIdentifierPrefix)_\(regionIdentifier)_\(i)"
             let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
             
             UNUserNotificationCenter.current().add(request) { error in
@@ -405,4 +408,25 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         }
     }
     
+    private func cancelScheduledNotifications(for regionIdentifier: String) {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let identifiersToCancel = requests
+                .map { $0.identifier }
+                .filter { $0.hasPrefix("\(self.notificationIdentifierPrefix)_\(regionIdentifier)_") }
+            
+            UNUserNotificationCenter.current()
+                .removePendingNotificationRequests(withIdentifiers: identifiersToCancel)
+            
+            print("Cancelled \(identifiersToCancel.count) scheduled notifications for region \(regionIdentifier)")
+        }
+    }
+}
+
+extension LocationManager: UNUserNotificationCenterDelegate {
+    // MARK: - UNUserNotificationCenterDelegate
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound, .badge])
+    }
 }
