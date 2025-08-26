@@ -37,3 +37,10 @@
 
 ## 1.0.7
 - Banner error fix
+
+## 1.0.8
+Added following to init to fix real device issues.
+- locationManager.desiredAccuracy = kCLLocationAccuracyBest
+- locationManager.distanceFilter = kCLDistanceFilterNone // Update on all movements
+- locationManager.allowsBackgroundLocationUpdates = true  // Critical!
+- locationManager.pausesLocationUpdatesAutomatically = false
