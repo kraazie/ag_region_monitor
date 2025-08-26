@@ -29,6 +29,10 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.distanceFilter = kCLDistanceFilterNone // Update on all movements
+        locationManager.allowsBackgroundLocationUpdates = true  // Critical!
+        locationManager.pausesLocationUpdatesAutomatically = false
         
         // 🔒 Set self as notification center delegate
         UNUserNotificationCenter.current().delegate = self
@@ -337,6 +341,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             locationManager.requestAlwaysAuthorization()
         case .authorizedAlways:
             print("Always permission granted")
+            locationManager.allowsBackgroundLocationUpdates = true
+            locationManager.pausesLocationUpdatesAutomatically = false
             startLocationUpdates()
         case .denied, .restricted:
             print("Location permission denied")
